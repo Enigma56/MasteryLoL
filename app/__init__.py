@@ -13,8 +13,7 @@ def create_app(test_config=None):
 
     # Can load instance config at this point
 
-    @app.route("/home")
-    def home():
-        return "This is home!"
+    from . import bp_mastery
+    app.register_blueprint(bp_mastery.bp)
 
     return app
