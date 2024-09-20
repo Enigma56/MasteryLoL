@@ -1,4 +1,4 @@
-from typing import Final, Tuple
+from typing import Final, Tuple, List
 import os
 import requests
 
@@ -7,7 +7,7 @@ BASE_URL: Final[str] = "https://na1.api.riotgames.com/lol/champion-mastery/v4"
 MASTERY_TIMEOUT: Final[int] = 5
 
 
-def get_all_mastery_by_puuid(riot_puuid: str) -> Tuple[int, dict[str, str]]:
+def get_all_mastery_by_puuid(riot_puuid: str) -> Tuple[int, List[dict[str, str]]]:
     endpoint: str = f"/champion-masteries/by-puuid/{riot_puuid}"
     url: str = f"{BASE_URL}{endpoint}"
     req = requests.get(
@@ -35,7 +35,7 @@ def get_top_mastery_by_puuid(riot_puuid: str) -> Tuple[int, dict[str, str]]:
     return req.status_code, mastery_info
 
 
-def get_sum_mastery_by_puuid(riot_puuid: str) -> Tuple[int, dict[str, str]]:
+def get_sum_mastery_by_puuid(riot_puuid: str) -> Tuple[int, List[dict[str, str]]]:
     """
     Get a player's total champion mastery score, which is the sum of
     individual champion mastery levels.

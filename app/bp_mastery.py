@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, g
 from ..api.account_data import get_account_information
 
 bp = Blueprint('mastery', __name__, url_prefix='/')
@@ -14,4 +14,5 @@ def profile():
     # Execute puuid search here
     info = get_account_information(request.form['ign'], request.form['tag'])
     print(info)
+    print(g.db)
     return render_template('profile.html', info=info)
