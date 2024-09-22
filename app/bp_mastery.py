@@ -9,10 +9,11 @@ def home():
     return render_template('home.html')
 
 
+# TODO: Check for account existance before rendering this page
 @bp.route('profile', methods=['GET', 'POST'])
 def profile():
     # Execute puuid search here
-    info = get_account_information(request.form['ign'], request.form['tag'])
+    info = get_account_information(request.form['ign'].lower(), request.form['tag'])
     print(info)
     print(g.db)
     return render_template('profile.html', info=info)

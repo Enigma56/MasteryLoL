@@ -1,38 +1,27 @@
-from flask import Flask, g
-import os
+from flask import Flask
+from dotenv import load_dotenv
 
 
 def create_app(test_config=None):
     """
     Create and configure the flask app
     """
+    load_dotenv()
+
+    # NOTE: Make sure to get rid of debug and testin configs before PROD
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DEBUG=True
-    )
-
-    # Can load instance config at this point
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
-
-    print(app.instance_path)
+        DEBUG=True,
+        TESTING=True
+       )
 
     from . import bp_mastery
     app.register_blueprint(bp_mastery.bp)
 
-    # These request-based functions do not need to be specific to the blueprint
-    # because I only need one Blueprint for this project
-    @app.before_request
-    def before_any_request():
-        # Open db request
-        print("A request will be executed")
-        g.db = "some db conn string"
-
+    # NOTE: Sessions automatically created.
+    # Sessions only need to be removed after request.
     @app.teardown_request
     def request_teardown(s):
-        print("A request has finished executing")
-
+        pass
     return app

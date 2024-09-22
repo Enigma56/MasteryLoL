@@ -16,7 +16,8 @@ def determine_owned_champions(riot_puuid: str, mastery_info: List[dict[str, str]
 
     owned_champ_keys = set([obj['championId'] for obj in mastery_info])
 
-    # TODO Construct a dictionary based on remaining items in all_champ_keys
+    # TODO:Construct a dictionary based on remaining items in all_champ_keys
+
     unowned_champion_keys = all_champ_keys - owned_champ_keys
     unowned_champions = dict()
     for key in unowned_champion_keys:
