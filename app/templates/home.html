@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %} MasteryLoL {% endblock %}
+
+{% block header%}
+    <h1>Mastery LoL</h1>
+{% endblock %}
+
+{% block content %}
+<div>
+    <form action="http://localhost:5000/profile" method="POST">
+        <div>
+            <label for="ign">Riot Name: </label>
+            <input name="ign" id="ign" type="text"/>
+        </div>
+        <div>
+            <label for="tag">Tagline:</label>
+            <input name="tag" id="tag" type="text"/>
+        </div>
+        <div>
+            <input type="submit" value="Search"/>
+        </div>
+    </form>
+</div>
+{% endblock %}
