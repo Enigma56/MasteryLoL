@@ -1,6 +1,9 @@
 from flask import Flask
 from dotenv import load_dotenv
 
+from . import db as db_helpers
+from .models import db
+
 
 def create_app(test_config=None):
     """
@@ -16,12 +19,24 @@ def create_app(test_config=None):
         TESTING=True
        )
 
+    dbURL = db_helpers.create_db_url()
+    print(dbURL)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = dbURL
+    app.config["SQLALCHEMY_BINDS"] = {"url": dbURL}
+    app.config["SQLALCHEMY_ECHO"] = True
+
+    db.init_app(app)
+
+    with app.app_context():
+        from . import models  # Redundant call to ensure models get imported
+        try:
+            db.create_all()
+            print(db.metadata.tables)
+        except Exception as e:
+            print(e)
+
     from . import bp_mastery
     app.register_blueprint(bp_mastery.bp)
 
-    # NOTE: Sessions automatically created.
-    # Sessions only need to be removed after request.
-    @app.teardown_request
-    def request_teardown(s):
-        pass
     return app
