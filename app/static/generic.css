@@ -1,3 +1,34 @@
+#base-body {
+    animation: 
+        3s gradient-roll-in;
+    background: linear-gradient(#FFF000, #000FFF);
+    height: 100vh;
+    width: 100vw;
+}
+
+@keyframes gradient-roll-out {
+    from {
+
+        background: linear-gradient(#000FFF, #FFF000);
+    }
+    
+    to {
+        background: linear-gradient(#FFF000, #000FFF);
+    }
+
+}
+
+
+@keyframes gradient-roll-in {
+    0% {
+        background: linear-gradient(#FFF000, #000FFF);
+    }
+
+    100% {
+        background: linear-gradient(#000FFF, #FFF000);
+    }
+}
+
 .flex-column {
     display: flex;
     flex-direction: column;
