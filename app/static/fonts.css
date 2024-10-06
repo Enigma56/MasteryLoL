@@ -1,0 +1,14 @@
+@font-face {
+    font-family: 'BeaufortforLOL-Bold';
+    src: url('./fonts/BeaufortforLOL-Bold.ttf');
+}
+
+@font-face {
+    font-family: 'Spiegel-Regular';
+    src: url('./fonts/Spiegel_TT_Regular.ttf');
+}
+
+h1 {
+    font-family: 'BeaufortforLOL-Bold';
+    font-size: 3em;
+}
