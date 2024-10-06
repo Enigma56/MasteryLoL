@@ -15,5 +15,4 @@ def profile():
     # Execute puuid search here
     info = get_account_information(request.form['ign'].lower(), request.form['tag'])
     print(info)
-    print(g.db)
     return render_template('profile.html', info=info)
