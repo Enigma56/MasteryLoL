@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 def create_db_url() -> str:
     TURSO_DATABASE_URL = os.environ.get("TURSO_DATABASE_URL")
     TURSO_AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN")

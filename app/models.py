@@ -7,7 +7,6 @@ db = SQLAlchemy(model_class=Base)
 
 # NOTE: Integer-type primary keys automatically increment
 
-
 class InitialAccountData(db.Model):
     __tablename__ = "initial_account_data"
 

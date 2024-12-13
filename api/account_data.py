@@ -56,5 +56,6 @@ def get_account_information(name: str, tagline: str) -> dict[str, str]:
     if status >= 400:
         return {"err": "puuid is invalid for found player!"}
 
+    # Union of two sets
     account_info |= summoner_info
     return account_info

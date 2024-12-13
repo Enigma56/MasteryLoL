@@ -37,6 +37,6 @@ def create_app(test_config=None):
             print(e)
 
     from . import bp_mastery
-    app.register_blueprint(bp_mastery.bp)
+    # app.register_blueprint(bp_mastery.bp)
 
     return app
