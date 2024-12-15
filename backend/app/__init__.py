@@ -36,7 +36,4 @@ def create_app(test_config=None):
         except Exception as e:
             print(e)
 
-    from . import bp_mastery
-    # app.register_blueprint(bp_mastery.bp)
-
     return app

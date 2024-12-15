@@ -1,7 +1,7 @@
 import unittest
-from api.player import determine_owned_champions
-from api.mastery import get_all_mastery_by_puuid
-from api.account_data import get_account_information
+from backend.api.player import determine_owned_champions
+from backend.api.mastery import get_all_mastery_by_puuid
+from backend.api.account_data import get_account_information
 
 
 class TestPlayer(unittest.TestCase):

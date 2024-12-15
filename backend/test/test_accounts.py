@@ -1,6 +1,6 @@
 import unittest
 
-from api.account_data import get_riot_puuid, get_summoner_information, get_account_information
+from backend.api.account_data import get_riot_puuid, get_summoner_information, get_account_information
 
 
 class TestAccount(unittest.TestCase):
