@@ -1,6 +1,6 @@
 import unittest
-import api.mastery as mastery
-from api.account_data import get_riot_puuid
+import backend.api.mastery as mastery
+from backend.api.account_data import get_riot_puuid
 
 
 class TestMastery(unittest.TestCase):
