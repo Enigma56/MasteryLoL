@@ -3,7 +3,7 @@ const Home = () => {
     return (
         <div className="flex flex-col items-center">
             <h1>Mastery LoL</h1>
-            <form name="profile" action="http://localhost:5173/account" method="POST" className="flex flex-col items-center">
+            <form name="profile" action="http://localhost:5173/profile" method="POST" className="flex flex-col items-center">
                 <div className="flex flex-row justify-center">
                     <label className="w-2/5">
                         <input id="profile" type="text" placeholder="Riot Name" maxLength="16" className="pl-2 w-full rounded outline outline-1 outline-hexmetal-3 placeholder:italic"/>

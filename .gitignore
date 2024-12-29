@@ -269,4 +269,6 @@ frontend/src/.DS_Store
 frontend/src/static/output.css
 
 backend/app/dev.db
+backend/htmlcov
+backend/.coverage
 backend/.idea
