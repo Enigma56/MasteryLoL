@@ -1,11 +1,15 @@
+import Footer from "./Footer.jsx";
+import Home from "./Home.jsx";
 
 function App() {
   return (
-      <>
-          <div>
-              <p>This is the body</p>
-          </div>
-      </>
+      <body>
+          {
+              // Conditionally render the home page depending on route
+          }
+          <Home/>
+          <Footer/>
+      </body>
   )
 }
 

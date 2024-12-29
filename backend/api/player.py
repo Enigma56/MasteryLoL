@@ -8,7 +8,7 @@ def determine_owned_champions(riot_puuid: str, mastery_info: List[dict[str, str]
     Determine which champions are owned by a riot player given a list of
     champions from riot compared to the champions present in mastery
     """
-    with open('../../data/champions.json', 'r') as f:
+    with open('../data/champions.json', 'r') as f:
         all_champs: dict = json.load(f)
 
     all_champ_keys = all_champs.keys()  # Only a reference to keys in dict

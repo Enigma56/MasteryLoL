@@ -16,3 +16,23 @@
     font-family: 'Spiegel-Regular';
     color: #a09b8c;
 }
+
+@layer base {
+    h1 {
+        font-family: 'BeaufortforLOL-Bold', serif;
+        font-size: 4rem;
+        color: #c89b3c;
+    }
+    h5 {
+        font-family: 'BeaufortforLOL-Bold', serif;
+        font-size: 1rem;
+    }
+
+    body {
+        background-color: #091428;
+    }
+}
+
+:is(#profile, #tagline):focus {
+    @apply rounded outline outline-1 outline-hexmagic-3
+}

@@ -1,7 +1,8 @@
+// TODO: Anchor to the bottom of the page, however long it is.
 const Footer = () => {
     return (
-        <footer>
-            <div>
+        <footer className="fixed bottom-0 flex flex-row justify-center w-full mb-4">
+            <div className="w-2/6">
                 <p>
                     MasteryLoL is not endorsed by Riot Games and does not reflect
                     the views or opinions of Riot Games or anyone officially involved
@@ -9,15 +10,16 @@ const Footer = () => {
                     associated properties are trademarks or registered trademarks of
                     Riot Games, Inc
                 </p>
-
             </div>
-            <div>
+            <div className="flex flex-col items-center w-1/6">
+                <h5>SOCIALS</h5>
+                <a>Something Here</a>
+                <a>Another</a>
+            </div>
+            <div className="flex flex-col items-center w-1/6">
                 <h5>LINKS</h5>
-                <div className="flex flex-col">
-                    <a>Privacy Policy</a>
-                    <a>Terms of Use?</a>
-                </div>
-
+                <a>Privacy Policy</a>
+                <a>Terms of Use?</a>
             </div>
         </footer>
     )
