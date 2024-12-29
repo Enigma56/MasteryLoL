@@ -554,12 +554,142 @@ video {
   display: none;
 }
 
+h1 {
+  font-family: 'BeaufortforLOL-Bold', serif;
+  font-size: 4rem;
+  color: #c89b3c;
+}
+
+h5 {
+  font-family: 'BeaufortforLOL-Bold', serif;
+  font-size: 1rem;
+}
+
+body {
+  background-color: #091428;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.bottom-0 {
+  bottom: 0px;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.ml-0\.5 {
+  margin-left: 0.125rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
 .flex {
   display: flex;
 }
 
+.w-1\/3 {
+  width: 33.333333%;
+}
+
+.w-1\/4 {
+  width: 25%;
+}
+
+.w-1\/6 {
+  width: 16.666667%;
+}
+
+.w-2\/6 {
+  width: 33.333333%;
+}
+
+.w-4\/5 {
+  width: 80%;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.w-3\/4 {
+  width: 75%;
+}
+
+.w-1\/2 {
+  width: 50%;
+}
+
+.w-2\/4 {
+  width: 50%;
+}
+
+.w-3\/5 {
+  width: 60%;
+}
+
+.w-2\/5 {
+  width: 40%;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
 .flex-col {
   flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
+}
+
+.from-hexmagic-4 {
+  --tw-gradient-from: #005A82 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(0 90 130 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.to-hexmagic-3 {
+  --tw-gradient-to: #0397AB var(--tw-gradient-to-position);
+}
+
+.pl-2 {
+  padding-left: 0.5rem;
+}
+
+.text-amber-100 {
+  --tw-text-opacity: 1;
+  color: rgb(254 243 199 / var(--tw-text-opacity, 1));
+}
+
+.outline {
+  outline-style: solid;
+}
+
+.outline-1 {
+  outline-width: 1px;
+}
+
+.outline-hexmetal-3 {
+  outline-color: #C89B3C;
 }
 
 @font-face {
@@ -577,4 +707,27 @@ video {
 :root {
   font-family: 'Spiegel-Regular';
   color: #a09b8c;
+}
+
+:is(#profile, #tagline):focus {
+  border-radius: 0.25rem;
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: #0397AB;
+}
+
+.placeholder\:pl-2::-moz-placeholder {
+  padding-left: 0.5rem;
+}
+
+.placeholder\:pl-2::placeholder {
+  padding-left: 0.5rem;
+}
+
+.placeholder\:italic::-moz-placeholder {
+  font-style: italic;
+}
+
+.placeholder\:italic::placeholder {
+  font-style: italic;
 }

@@ -1,11 +1,38 @@
-from typing import Tuple, Final
+from typing import Tuple, Final, List
 import os
 import requests
 
+from flask import Blueprint, jsonify, Response, request
 
 API_KEY: str | None = os.environ.get("API_KEY")
 ACCOUNT_TIMEOUT: Final[int] = 5
 
+account = Blueprint("account", __name__, url_prefix="/account")
+
+@account.get("/test")
+def test() -> Response:
+    print("test")
+    return jsonify({"status": "ok"})
+
+
+@account.get("/user")
+def get_account_information() -> Response:
+    name = request.args.get("name")
+    tagline = request.args.get("tag")
+    print(f"Getting account information for {name} with tagline: {tagline}")
+    name = name.lower()
+    status, account_info = get_riot_puuid(name, tagline)
+    if status >= 400:
+        return jsonify({"err": "Player not found!"})
+
+    puuid = account_info['puuid']
+    status, summoner_info = get_summoner_information(puuid)
+    if status >= 400:
+        return jsonify({"err": "puuid is invalid for found player!"})
+
+    # Union of two sets
+    account_info |= summoner_info
+    return jsonify(account_info)
 
 def get_riot_puuid(name: str, tagline: str) -> Tuple[int, dict[str, str]]:
     """
@@ -22,7 +49,6 @@ def get_riot_puuid(name: str, tagline: str) -> Tuple[int, dict[str, str]]:
                      }
             )
     account_info = req.json()
-    # print(account_info)
     req.close()
     return req.status_code, account_info
 
@@ -44,18 +70,3 @@ def get_summoner_information(riot_puuid: str) -> Tuple[int, dict[str, str]]:
     summoner_info = req.json()
 
     return req.status_code, summoner_info
-
-
-def get_account_information(name: str, tagline: str) -> dict[str, str]:
-    status, account_info = get_riot_puuid(name, tagline)
-    if status >= 400:
-        return {"err": "Player not found!"}
-
-    puuid = account_info['puuid']
-    status, summoner_info = get_summoner_information(puuid)
-    if status >= 400:
-        return {"err": "puuid is invalid for found player!"}
-
-    # Union of two sets
-    account_info |= summoner_info
-    return account_info

@@ -1,3 +1,6 @@
+from typing import List
+import datetime
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
@@ -7,14 +10,20 @@ db = SQLAlchemy(model_class=Base)
 
 # NOTE: Integer-type primary keys automatically increment
 
-class InitialAccountData(db.Model):
-    __tablename__ = "initial_account_data"
+class PlayerMasteryData(db.Model):
+    __tablename__ = "player_mastery_data"
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    riot_puu_id: Mapped[str] = mapped_column(db.String, nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False)
-    initial_level: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    riot_puuid: Mapped[str] = mapped_column(db.String, db.ForeignKey('riot_accounts.riot_puuid'), nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False, default=datetime.datetime.now)
+    # initial_level: Mapped[int] = mapped_column(db.Integer, nullable=False)
+
+    # Store Mastery data in JSON format
     initial_mastery: Mapped[dict] = mapped_column(db.JSON, nullable=False)
+    current_mastery: Mapped[dict] = mapped_column(db.JSON, nullable=False)
+
+    account: Mapped["RiotAccounts"] = db.relationship(back_populates="mastery_data")
+
     # champion_id: Mapped[int] = mapped_column(db.Integer, nullable=False)
     # champion_level: Mapped[int] = mapped_column(db.Integer, nullable=False)
     # champion_points: Mapped[int] = mapped_column(db.Integer, nullable=False)
@@ -22,39 +31,43 @@ class InitialAccountData(db.Model):
     def __repr__(self) -> str:
         return (
             f"ChampionMastery(id={self.id}, "
-            f"riot_puuid='{self.riot_puu_id}', "
+            f"riot_puuid='{self.riot_puuid}', "
             f"created_at={self.created_at!r}, "
             f"initial_level={self.initial_level})")
 
-
-class Account(db.Model):
+class RiotAccounts(db.Model):
     __tablename__ = "riot_accounts"
 
-    riot_puu_id: Mapped[str] = mapped_column(primary_key=True, unique=True)
+    riot_puuid: Mapped[str] = mapped_column(primary_key=True, unique=True)
     game_name: Mapped[str] = mapped_column(db.String(17), nullable=False)
     tag_line: Mapped[str] = mapped_column(db.String(6), nullable=False)
-    summoner_level: Mapped[int] = mapped_column(db.Integer)
     profile_icon: Mapped[int] = mapped_column(db.Integer)
-    created_at_epoch: Mapped[int] = mapped_column(db.Integer)  # LoL epoch timestamp in seconds
-    data_last_retrieved_epoch: Mapped[int] = mapped_column(db.Integer)
+    initial_summoner_level: Mapped[int] = mapped_column(db.Integer)
+    current_summoner_level: Mapped[int] = mapped_column(db.Integer)
 
-    matches = db.relationship('GlobalMatchStats', back_populates='account')
+    # Handle account creation date and when data was last retrieved
+    created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False, default=datetime.datetime.now)  # Convert account creation date in UTC to seconds
+    data_last_retrieved: Mapped[int] = mapped_column(db.Integer) # Current UTC in seconds
+
+    mastery_data: Mapped["PlayerMasteryData"] = db.relationship(back_populates="account")
+    matches: Mapped[List["MatchStats"]] = db.relationship()
 
     def __repr__(self):
-        return (f"Account(riot_puu_id:{self.riot_puu_id}, "
+        return (f"Account(riot_puuid:{self.riot_puuid}, "
                 f"game_name:{self.game_name}), tag_line:{self.tag_line}, "
                 f"summoner_level:{self.summoner_level}, "
                 f"profile_icon:{self.profile_icon})")
 
-
+# Stats for an individual player in a match
 class MatchStats(db.Model):
     __tablename__ = "match_stats"
 
     # NOTE: Game metadata
-    match_id: Mapped[str] = mapped_column(db.String, primary_key=True)
-    riot_puu_id: Mapped[str] = mapped_column(db.String, db.ForeignKey('riot_accounts.riot_puu_id'), primary_key=True)
+    match_id: Mapped[str] = mapped_column(db.String(14), primary_key=True)
+    riot_puuid: Mapped[str] = mapped_column(db.String, db.ForeignKey('riot_accounts.riot_puuid'), primary_key=True)
 
     map_id: Mapped[int] = mapped_column(db.Integer)
+    queue_id: Mapped[int] = mapped_column(db.Integer)
     team_id: Mapped[int] = mapped_column(db.Integer)
     game_creation: Mapped[int] = mapped_column(db.Integer)
     game_mode: Mapped[str] = mapped_column(db.String)
@@ -203,7 +216,7 @@ class MatchStats(db.Model):
         return (
             f"MatchPlayerStats("
             f"match_id='{self.match_id}', "
-            f"riot_puu_id='{self.riot_puu_id}', "
+            f"riot_puuid='{self.riot_puuid}', "
             f"champion_name='{self.champion_name}', "
             f"kills={self.kills}, "
             f"deaths={self.deaths}, "
