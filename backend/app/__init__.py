@@ -6,7 +6,7 @@ from . import db as db_helpers
 from .models import db
 
 
-def create_app(test_config=None):
+def create_app(testing=False):
     """
     Create and configure the flask app
     """
@@ -19,22 +19,21 @@ def create_app(test_config=None):
         app.config.from_mapping(
             SECRET_KEY='dev',
             DEBUG=True,
-            TESTING=True
+            SQLALCHEMY_ECHO=True,
         )
 
-        # Register blueprints
-        from ..api.account_data import account
-        # print(account)
-        app.register_blueprint(account)
+        if not testing:
+            db_url = f"sqlite:///{app.root_path}/dev.db"
+            print(db_url)
+        else:
+            db_url = f"sqlite:////Users/charlielyster/Developer/Personal/MasteryLoL/backend/tests/testing.db"
 
-        dbURL = f"sqlite:///{app.root_path}/dev.db"
-        print(dbURL)
-        app.config["SQLALCHEMY_DATABASE_URI"] = dbURL
-        app.config["SQLALCHEMY_BINDS"] = {"url": dbURL}
-        app.config["SQLALCHEMY_ECHO"] = True
+        app.config.update(
+            SQLALCHEMY_DATABASE_URI=db_url,
+            SQLALCHEMY_BINDS={"url": db_url},
+        )
 
         db.init_app(app)
-
         with app.app_context():
             from . import models  # Redundant call to ensure models get imported
             try:
@@ -43,6 +42,10 @@ def create_app(test_config=None):
             except Exception as e:
                 print(e)
 
+        # Register blueprints
+        from api.account_data import account
+        app.register_blueprint(account)
+
         return app
 
     elif environment == "prod":
@@ -50,4 +53,3 @@ def create_app(test_config=None):
     else:
         raise Exception(f"Unsupported environment: {environment}. Check to see if ENV variable is set to DEV or PROD")
 
-    # NOTE: Make sure to get rid of debug and testin configs before PROD

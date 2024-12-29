@@ -3,3 +3,5 @@ flask_sqlalchemy
 requests
 sqlalchemy-libsql
 python-dotenv
+pytest
+coverage
