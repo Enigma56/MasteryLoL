@@ -1,10 +1,14 @@
 import os
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
 
 from . import db as db_helpers
-from .models import db
+# from .models import db
 
+Base = declarative_base()
+db = SQLAlchemy(model_class=Base)
 
 def create_app(testing=False):
     """
@@ -19,7 +23,7 @@ def create_app(testing=False):
         app.config.from_mapping(
             SECRET_KEY='dev',
             DEBUG=True,
-            SQLALCHEMY_ECHO=True,
+            SQLALCHEMY_ECHO=False,
         )
 
         if not testing:
@@ -30,21 +34,27 @@ def create_app(testing=False):
 
         app.config.update(
             SQLALCHEMY_DATABASE_URI=db_url,
-            SQLALCHEMY_BINDS={"url": db_url},
         )
 
         db.init_app(app)
-        with app.app_context():
-            from . import models  # Redundant call to ensure models get imported
-            try:
-                db.create_all()
-                print(db.metadata.tables)
-            except Exception as e:
-                print(e)
+
+        if not testing:
+            with app.app_context():
+                from .models import TestTable, RiotAccounts, PlayerMasteryData, MatchStats # Redundant call to ensure models get imported
+                try:
+                    db.create_all()
+                except Exception as e:
+                    print(e)
 
         # Register blueprints
-        from api.account_data import account
-        app.register_blueprint(account)
+        from .api import mastery as m
+        from .api import account_data as acc
+        app.register_blueprint(acc.account_bp)
+        app.register_blueprint(m.mastery_bp)
+
+        @app.route('/', methods=['GET'])
+        def test():
+            return {"hello": "world"}, 200
 
         return app
 
