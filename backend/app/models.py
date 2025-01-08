@@ -1,29 +1,41 @@
 from typing import List
 import datetime
 
-from flask_sqlalchemy import SQLAlchemy
+
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
 
-Base = declarative_base()
-db = SQLAlchemy(model_class=Base)
+from . import db
 
 # NOTE: Integer-type primary keys automatically increment
+class TableTest(db.Model):
+    __tablename__ = "test"
+
+    id: Mapped[int] = db.Column('id', db.Integer, primary_key=True)
+    profile: Mapped[str] = db.Column('profile', db.String)
+    tag: Mapped[str] = db.Column('tag', db.String)
+
+    def __repr__(self) -> str:
+        return (
+            f"TestTable(id={self.id}, profile={self.profile}, tag={self.tag})"
+        )
 
 class PlayerMasteryData(db.Model):
     __tablename__ = "player_mastery_data"
 
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    riot_puuid: Mapped[str] = mapped_column(db.String, db.ForeignKey('riot_accounts.riot_puuid'), nullable=False)
+    #id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
+    riot_puuid: Mapped[str] = mapped_column(db.String, primary_key=True, nullable=False)
     created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False, default=datetime.datetime.now)
-    # initial_level: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    last_updated: Mapped[int] = mapped_column(db.Integer)  # Current UTC in seconds
 
     # Store Mastery data in JSON format
     initial_mastery: Mapped[dict] = mapped_column(db.JSON, nullable=False)
     current_mastery: Mapped[dict] = mapped_column(db.JSON, nullable=False)
 
+    parent_id: Mapped[str] = mapped_column(db.String, db.ForeignKey("riot_accounts.riot_puuid"))
     account: Mapped["RiotAccounts"] = db.relationship(back_populates="mastery_data")
 
+    # initial_level: Mapped[int] = mapped_column(db.Integer, nullable=False)
     # champion_id: Mapped[int] = mapped_column(db.Integer, nullable=False)
     # champion_level: Mapped[int] = mapped_column(db.Integer, nullable=False)
     # champion_points: Mapped[int] = mapped_column(db.Integer, nullable=False)
@@ -47,7 +59,7 @@ class RiotAccounts(db.Model):
 
     # Handle account creation date and when data was last retrieved
     created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False, default=datetime.datetime.now)  # Convert account creation date in UTC to seconds
-    data_last_retrieved: Mapped[int] = mapped_column(db.Integer) # Current UTC in seconds
+    last_updated: Mapped[int] = mapped_column(db.Integer) # Current UTC in seconds
 
     mastery_data: Mapped["PlayerMasteryData"] = db.relationship(back_populates="account")
     matches: Mapped[List["MatchStats"]] = db.relationship()
