@@ -4,8 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
 
-from . import db as db_helpers
-# from .models import db
+from . import dbh as db_helpers
 
 Base = declarative_base()
 db = SQLAlchemy(model_class=Base)
@@ -40,8 +39,11 @@ def create_app(testing=False):
 
         if not testing:
             with app.app_context():
-                from .models import TestTable, RiotAccounts, PlayerMasteryData, MatchStats # Redundant call to ensure models get imported
+                # db.metadata.clear()
+
+                from .models import TableTest, RiotAccounts, PlayerMasteryData, MatchStats # Redundant call to ensure models get imported
                 try:
+                    db.drop_all()
                     db.create_all()
                 except Exception as e:
                     print(e)

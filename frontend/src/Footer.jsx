@@ -1,7 +1,6 @@
-// TODO: Anchor to the bottom of the page, however long it is.
 const Footer = () => {
     return (
-        <footer className="fixed bottom-0 flex flex-row justify-center w-full mb-4">
+        <footer className="flex flex-row justify-center w-full mb-4">
             <div className="w-2/6">
                 <p>
                     MasteryLoL is not endorsed by Riot Games and does not reflect

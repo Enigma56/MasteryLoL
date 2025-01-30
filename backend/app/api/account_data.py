@@ -1,102 +1,109 @@
 import os
 import requests
+import json
+
 from typing import Tuple, Final, List
 from flask import Blueprint, jsonify, make_response, Response, request, current_app as app
-from sqlalchemy import select
-from .utils import constants as const
+from sqlalchemy.exc import InvalidRequestError, DatabaseError
+
+from .utils import constants as consts, db_helpers
 from .. import db
-from ..models import TableTest
+from ..models import TableTest, RiotAccounts
 
 API_KEY: str | None = os.environ.get("API_KEY")
 ACCOUNT_TIMEOUT: Final[int] = 5
+EMPTY_RESPONSE: Final[str] = json.dumps({})
 
 account_bp = Blueprint("account", __name__, url_prefix="/account")
 
-@account_bp.route("/test", methods=["GET"])
-def tests() -> Response:
-    with app.app_context():
-        test_entry = TableTest(profile="Its just a prank", tag="6969")
-        db.session.add(test_entry)
-        db.session.commit()
-    print("tests")
-    return jsonify({"hello": "world"})
-
-@account_bp.route("/test_pk", methods=["GET"])
-def tests_get() -> Response:
-    app.logger.debug(f"Attempting to get pk")
-    pk = request.args.get("id")
-    print(pk)
-    with app.app_context():
-        stmt = db.session.get(TableTest, pk)
-        print(stmt)
-
-    return jsonify({"pk": pk})
-
-
 @account_bp.get("/user")
-def get_account_information() -> tuple[Response, int, dict[str, str]]:
-    name: str = request.args.get("name")
-    tagline: str = request.args.get("tag")
-    if len(name) > const.MAX_NAME_LENGTH or len(name) <= 0:
-        app.logger.error("Name too long")
-        return jsonify({"error": "Invalid name"}), 400, const.DEFAULT_HEADERS
-    if len(tagline) > const.MAX_TAG_LENGTH or len(tagline) <= 0:
-        app.logger.error("Tag too long")
-        return jsonify({"error": "Invalid name"}), 400, const.DEFAULT_HEADERS
+def get_account_information() -> Response:
+    """
+    Get account information from Riot API
+    """
+    res = make_response()
+    res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
 
+    name: str = request.args.get("name").lower()
+    tagline: str = request.args.get("tag")
     app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
-    name = name.lower()
 
     status, account_info = get_riot_puuid(name, tagline)
     if status >= 400:
         app.logger.error(f"Error getting account information for {name} with tagline: {tagline}")
-        return jsonify({"error": "Player not found!"}), status, {}
+        res.status_code = status
+        res.response = json.dumps({"error": f"Error getting account information for {name}"})
+        return res
 
-    puuid = account_info['puuid']
-    status, summoner_info = get_summoner_information(puuid) # Pretty sure that if the first endpoint succeeds, this will
-    if status >= 400:
-        app.logger.error(f"Error getting summoner information for {name} with puuid: {puuid}")
-        return jsonify({"error": "puuid is invalid for found player!"}), status, {}
+    riot_puuid = account_info['puuid']
 
-    # Union of two sets
-    account_info |= summoner_info
-    res = make_response(account_info)
-    res.set_cookie("riot_puuid", account_info['puuid'])
-    print(account_info)
-    return res, 200, const.DEFAULT_HEADERS
+    with app.app_context():
+        user_record = db_helpers.get_user_record(db.session, riot_puuid)
+        if user_record is None:
+            res.status_code = 404
+            return res
 
+    res.response = json.dumps(user_record, default=str)
+    return res
+
+
+# TODO: Change to return a response type only
 @account_bp.post("/user")
-def post_acccount_information() -> tuple[Response, int, dict[str, str]]:
-    name: str = request.args.get("name")
-    tagline: str = request.args.get("tag")
-    if len(name) > const.MAX_NAME_LENGTH or len(name) <= 0:
-        app.logger.error("Name too long")
-        return jsonify({"error": "Invalid name"}), 400, const.DEFAULT_HEADERS
-    if len(tagline) > const.MAX_TAG_LENGTH or len(tagline) <= 0:
-        app.logger.error("Tag too long")
-        return jsonify({"error": "Invalid name"}), 400, const.DEFAULT_HEADERS
+def post_acccount_information() -> Response:
+    """
+    Create account in DB or retrieve existing record
+    """
+    res = make_response()
+    res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
 
-    app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
-    name = name.lower()
+    name: str = request.args.get("name").lower()
+    tagline: str = request.args.get("tag")
 
     status, account_info = get_riot_puuid(name, tagline)
     if status >= 400:
         app.logger.error(f"Error getting account information for {name} with tagline: {tagline}")
-        return jsonify({"error": "Player not found!"}), status, {}
+        res.status_code = status
+        res.response = json.dumps({})
+        return res
 
     puuid = account_info['puuid']
-    status, summoner_info = get_summoner_information(
-        puuid)  # Pretty sure that if the first endpoint succeeds, this will
-    if status >= 400:
-        app.logger.error(f"Error getting summoner information for {name} with puuid: {puuid}")
-        return jsonify({"error": "puuid is invalid for found player!"}), status, {}
 
-    # Union of two sets
-    account_info |= summoner_info
-    res = make_response(account_info)
+    with app.app_context():
+        record = db_helpers.get_user_record(db.session, puuid)
+        if record is not None:
+            app.logger.error("Riot account already exists, setting cookie instead")
+            res.status_code = 400
+            return res
+
+    app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
+    _, summoner_info = get_summoner_information(puuid)
+    account_info |= summoner_info # Union of two sets
+    app.logger.info(account_info)
+
+    try:
+        with app.app_context():
+            account_entry = RiotAccounts(
+                riot_puuid=puuid,
+                game_name=account_info['gameName'],
+                tag_line=account_info['tagLine'],
+                profile_icon=0,
+                initial_summoner_level=account_info['summonerLevel'],
+                current_summoner_level=account_info['summonerLevel'])
+            db.session.add(account_entry)
+            db.session.commit()
+    except DatabaseError as e:
+        app.logger.error(e)
+
+        res.status_code = 400
+        res.response = json.dumps({})
+        return res
+
+    res.status_code=201
     res.set_cookie("riot_puuid", account_info['puuid'])
-    print(account_info)
-    return res, 200, const.DEFAULT_HEADERS
+    res.response = json.dumps({"game_name": account_info["gameName"], "tag_line": account_info["tagLine"]}, default=str)
+    return res
+
+
 
 def get_riot_puuid(name: str, tagline: str) -> Tuple[int, dict[str, str]]:
     """
@@ -117,6 +124,7 @@ def get_riot_puuid(name: str, tagline: str) -> Tuple[int, dict[str, str]]:
     return req.status_code, account_info
 
 
+# TODO: Rethink this method and how it works
 def get_summoner_information(riot_puuid: str) -> Tuple[int, dict[str, str]]:
     """
     Retrieves summoner information from a provided Riot PUUID
@@ -134,3 +142,24 @@ def get_summoner_information(riot_puuid: str) -> Tuple[int, dict[str, str]]:
     summoner_info = req.json()
 
     return req.status_code, summoner_info
+
+#NOTE: Test Endpoints
+@account_bp.route("/test", methods=["GET"])
+def tests() -> Response:
+    with app.app_context():
+        test_entry = TableTest(name="its just a prank", tag="6969")
+        db.session.add(test_entry)
+        db.session.commit()
+
+    return jsonify({"hello": "world"})
+
+@account_bp.route("/test_pk", methods=["GET"])
+def tests_get() -> Response:
+    app.logger.debug(f"Attempting to get pk")
+    pk = request.args.get("id")
+    print(pk)
+    with app.app_context():
+        stmt = db.session.get(TableTest, pk)
+        print(stmt)
+
+    return jsonify({"pk": pk})
