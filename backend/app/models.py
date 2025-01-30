@@ -3,7 +3,8 @@ import datetime
 
 
 from sqlalchemy import DateTime
-from sqlalchemy.orm import Mapped, mapped_column, declarative_base
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
 
 from . import db
 
@@ -12,12 +13,12 @@ class TableTest(db.Model):
     __tablename__ = "test"
 
     id: Mapped[int] = db.Column('id', db.Integer, primary_key=True)
-    profile: Mapped[str] = db.Column('profile', db.String)
+    name: Mapped[str] = db.Column('name', db.String)
     tag: Mapped[str] = db.Column('tag', db.String)
 
     def __repr__(self) -> str:
         return (
-            f"TestTable(id={self.id}, profile={self.profile}, tag={self.tag})"
+            f"TestTable(id={self.id}, game_name={self.name}, tag={self.tag})"
         )
 
 class PlayerMasteryData(db.Model):
@@ -25,8 +26,8 @@ class PlayerMasteryData(db.Model):
 
     #id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     riot_puuid: Mapped[str] = mapped_column(db.String, primary_key=True, nullable=False)
-    created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False, default=datetime.datetime.now)
-    last_updated: Mapped[int] = mapped_column(db.Integer)  # Current UTC in seconds
+    created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False, default=func.now())
+    last_updated: Mapped[int] = mapped_column(db.Integer, default=func.now())  # Current UTC in seconds
 
     # Store Mastery data in JSON format
     initial_mastery: Mapped[dict] = mapped_column(db.JSON, nullable=False)
@@ -58,15 +59,19 @@ class RiotAccounts(db.Model):
     current_summoner_level: Mapped[int] = mapped_column(db.Integer)
 
     # Handle account creation date and when data was last retrieved
-    created_at: Mapped[DateTime] = mapped_column(db.DateTime, nullable=False, default=datetime.datetime.now)  # Convert account creation date in UTC to seconds
-    last_updated: Mapped[int] = mapped_column(db.Integer) # Current UTC in seconds
+    created_at: Mapped[DateTime] = mapped_column(db.DateTime, default=func.now())  # Convert account creation date in UTC to seconds
+    last_updated: Mapped[DateTime] = mapped_column(db.DateTime, default=func.now()) # Current UTC in seconds
 
     mastery_data: Mapped["PlayerMasteryData"] = db.relationship(back_populates="account")
     matches: Mapped[List["MatchStats"]] = db.relationship()
 
+    def to_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self):
         return (f"Account(riot_puuid:{self.riot_puuid}, "
-                f"game_name:{self.game_name}), tag_line:{self.tag_line}, "
+                f"game_name:{self.game_name}), "
+                f"tag_line:{self.tag_line}, "
                 f"summoner_level:{self.summoner_level}, "
                 f"profile_icon:{self.profile_icon})")
 
@@ -77,6 +82,8 @@ class MatchStats(db.Model):
     # NOTE: Game metadata
     match_id: Mapped[str] = mapped_column(db.String(14), primary_key=True)
     riot_puuid: Mapped[str] = mapped_column(db.String, db.ForeignKey('riot_accounts.riot_puuid'), primary_key=True)
+
+    created_at: Mapped[DateTime] = mapped_column(db.DateTime, default=func.now())
 
     map_id: Mapped[int] = mapped_column(db.Integer)
     queue_id: Mapped[int] = mapped_column(db.Integer)

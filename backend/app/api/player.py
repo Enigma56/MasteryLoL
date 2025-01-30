@@ -1,25 +1,49 @@
 import json
-from typing import List
-import mastery as m
+from flask import current_app as app, Blueprint, Response, make_response, request
+from sqlalchemy.exc import DatabaseError
 
+from .. import db
+from ..models import PlayerMasteryData
+from .utils import constants
+from .mastery import get_all_mastery
 
-# def determine_owned_champions(riot_puuid: str, mastery_info: List[dict[str, str]]) -> dict[str, str]:
-#     """
-#     Determine which champions are owned by a riot player given a list of
-#     champions from riot compared to the champions present in mastery
-#     """
-#     with open('../data/champions_by_id.json', 'r') as f:
-#         all_champs: dict = json.load(f)
-#
-#     all_champ_keys = all_champs.keys()  # Only a reference to keys in dict
-#     m.get_all_mastery_by_puuid(riot_puuid)
-#
-#     owned_champ_keys = set([obj['championId'] for obj in mastery_info])
-#
-#     # TODO:Construct a dictionary based on remaining items in all_champ_keys
-#
-#     unowned_champion_keys = all_champ_keys - owned_champ_keys
-#     unowned_champions = dict()
-#     for key in unowned_champion_keys:
-#         unowned_champions[key] = all_champs[key]
-#     return unowned_champions
+player_bp = Blueprint('player', __name__, url_prefix='/player')
+
+@player_bp.post("/journey/start")
+def start_journey() -> Response:
+    res = make_response()
+    res.headers.update(constants.DEFAULT_RESPONSE_HEADERS)
+
+    puuid: str = request.cookies.get('riot_puuid')
+
+    mastery_info, status = get_all_mastery(puuid)
+    if status >= 400:
+        res.status_code = status
+        return res
+
+    mastery_data = json.dumps(mastery_info[0])
+
+    with app.app_context():
+        try:
+            player_mastery_data = PlayerMasteryData(
+                riot_puuid=puuid,
+                parent_id=puuid,
+
+                initial_mastery=mastery_data,
+                current_mastery=mastery_data,
+            )
+            db.session.add(player_mastery_data)
+        except DatabaseError as e:
+            app.logger.error(e)
+            db.session.rollback()
+            res.status_code = 404
+            return res
+        finally:
+            db.session.commit()
+    return res
+
+@player_bp.put("/journey/update")
+def update_journey() -> Response:
+    res = make_response()
+    res.headers.update(constants.DEFAULT_RESPONSE_HEADERS)
+    return res
