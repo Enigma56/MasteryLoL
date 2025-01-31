@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {getChampionName, getChampionSquareAsset} from "../utils/dataDragonAssets.js";
+import {getChampionName, getChampionSquareAsset} from "../../utils/dataDragonAssets.js";
 
 const MasteryTable = () => {
     const [mastery, setMastery] = useState([])

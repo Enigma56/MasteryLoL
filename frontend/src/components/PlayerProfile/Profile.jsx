@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 
-import useAuth from "../hooks/useAuth.js"
-import PlayerName from './PlayerName'
-import MasteryTable from "./MasteryTable"
+import useAuth from "../../hooks/useAuth.js"
+import PlayerName from './PlayerName.jsx'
+import MasteryTable from "./MasteryTable.jsx"
 import Footer from '../Footer.jsx'
 
 //TODO: Load everything then render profile

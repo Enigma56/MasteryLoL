@@ -42,6 +42,7 @@ def start_journey() -> Response:
             db.session.commit()
     return res
 
+#TODO: Implement starting a mastery journey
 @player_bp.put("/journey/update")
 def update_journey() -> Response:
     res = make_response()

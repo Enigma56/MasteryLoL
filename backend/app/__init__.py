@@ -49,10 +49,12 @@ def create_app(testing=False):
                     print(e)
 
         # Register blueprints
-        from .api import mastery as m
-        from .api import account_data as acc
-        app.register_blueprint(acc.account_bp)
-        app.register_blueprint(m.mastery_bp)
+        from .api import mastery
+        from .api import account_data
+        from .api import match
+        app.register_blueprint(account_data.account_bp)
+        app.register_blueprint(mastery.mastery_bp)
+        app.register_blueprint(match.match_bp)
 
         @app.route('/', methods=['GET'])
         def test():

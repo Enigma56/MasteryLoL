@@ -22,6 +22,7 @@ const useAuth = ({name, tagline}) => {
                 if (res.status >= 400) {
                     let postRes = await fetch(url, {method: "POST", credentials: 'include'}).catch(error => console.log(error))
                     const data = await postRes.json()
+                    //if (postRes.status = 400) {}
                     setRiotData(data)
                 } else {
                     const data = await res.json()
