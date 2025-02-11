@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router"
+import { useLocation } from "react-router"
 import {useState, useEffect, useRef} from "react"
 import Footer from "./Footer.jsx";
 
 //TODO: Validate whether user exists before navigation
 const Home = () => {
     let navigate = useNavigate()
+    //const location = useLocation()
     const [riotUser, setRiotUser] = useState({name: "", tagline: ""})
     const [isNotQueryableUser, setIsNotQueryableUser] = useState(true)
     const formRef = useRef(null)

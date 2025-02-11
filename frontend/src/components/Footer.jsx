@@ -1,6 +1,6 @@
 const Footer = () => {
     return (
-        <footer className="flex flex-row justify-center w-full mb-4">
+        <footer className="flex flex-row justify-center max-h-fit mb-4">
             <div className="w-2/6">
                 <p>
                     MasteryLoL is not endorsed by Riot Games and does not reflect

@@ -128,6 +128,7 @@ class MatchStats(db.Model):
     # eligible_for_progression: Mapped[bool] = mapped_column(db.Boolean)
     # individual_position: Mapped[str] = mapped_column(db.String(20))
 
+    # NOTE: Champion-related stats
     champ_experience: Mapped[int] = mapped_column(db.Integer)
     champ_level: Mapped[int] = mapped_column(db.Integer)
     champion_id: Mapped[int] = mapped_column(db.Integer)
@@ -136,6 +137,18 @@ class MatchStats(db.Model):
     # summoner_name: Mapped[str] = mapped_column(db.String(50))
     # champion_transform: Mapped[int] = mapped_column(db.Integer)
 
+
+    summoner1_casts: Mapped[int] = mapped_column(db.Integer)
+    summoner1_id: Mapped[int] = mapped_column(db.Integer)
+    summoner2_casts: Mapped[int] = mapped_column(db.Integer)
+    summoner2_id: Mapped[int] = mapped_column(db.Integer)
+    summoner_id: Mapped[str] = mapped_column(db.String(63))
+    spell1_casts: Mapped[int] = mapped_column(db.Integer)
+    spell2_casts: Mapped[int] = mapped_column(db.Integer)
+    spell3_casts: Mapped[int] = mapped_column(db.Integer)
+    spell4_casts: Mapped[int] = mapped_column(db.Integer)
+
+    # NOTE: Item-related
     gold_earned: Mapped[int] = mapped_column(db.Integer)
     gold_spent: Mapped[int] = mapped_column(db.Integer)
     consumables_purchased: Mapped[int] = mapped_column(db.Integer)
@@ -147,16 +160,6 @@ class MatchStats(db.Model):
     item5: Mapped[int] = mapped_column(db.Integer)
     item6: Mapped[int] = mapped_column(db.Integer)  # NOTE: The Ward purchased
     # items_purchased: Mapped[int] = mapped_column(db.Integer)
-
-    summoner1_casts: Mapped[int] = mapped_column(db.Integer)
-    summoner1_id: Mapped[int] = mapped_column(db.Integer)
-    summoner2_casts: Mapped[int] = mapped_column(db.Integer)
-    summoner2_id: Mapped[int] = mapped_column(db.Integer)
-    summoner_id: Mapped[str] = mapped_column(db.String(63))
-    spell1_casts: Mapped[int] = mapped_column(db.Integer)
-    spell2_casts: Mapped[int] = mapped_column(db.Integer)
-    spell3_casts: Mapped[int] = mapped_column(db.Integer)
-    spell4_casts: Mapped[int] = mapped_column(db.Integer)
 
     # NOTE: Kill-related stats
     deaths: Mapped[int] = mapped_column(db.Integer)

@@ -5,6 +5,7 @@ import useAuth from "../../hooks/useAuth.js"
 import PlayerName from './PlayerName.jsx'
 import MasteryTable from "./MasteryTable.jsx"
 import Footer from '../Footer.jsx'
+import Journey from "./Journey.jsx";
 
 //TODO: Load everything then render profile
 //TODO: Check to see if player exists before rendering & navigating to profile page
@@ -40,37 +41,31 @@ const Profile = () => {
                 </div>
             ) : (
                 <>
-                    <PlayerName name={player['game_name']} tag={player['tag_line']} isLoading={isLoading}/>
-                    <div className="flex flex-row h-fit w-4/5 mx-auto">
-                        <div className="flex flex-col h-full w-full">
-                            <div className="flex flex-row justify-center">
-                                <button
-                                    id="masterylist"
-                                    onClick={handleIsMasteryList}
-                                    className={ isMasteryList ? "pr-2 underline" : "pr-2 hover:underline"}
-                                >
-                                    Mastery
-                                </button>
-                                <button
-                                    id="masteryjourney"
-                                    onClick={handleIsMasteryList}
-                                    className={ !isMasteryList ? "pr-2 underline" : "pr-2 hover:underline"}
-                                >
-                                    Journey
-                                </button>
-                            </div>
-
-                            {isMasteryList &&
-                                <MasteryTable/>
-                            }
-                            {!isMasteryList &&
-                                <div className="flex flex-row justify-center items-center h-full">
-                                    <button className="rounded px-2 bg-hexmagic-4 h-fit">
-                                        Start Journey
-                                    </button>
-                                </div>
-                            }
+                    <div>
+                        <PlayerName name={player['game_name']} tag={player['tag_line']} isLoading={isLoading}/>
+                        <div className="flex flex-row mx-auto w-2/5 justify-between">
+                            <h4>Total Mastery: 100</h4>
+                            <h4>Points: 0 of 1,000,000</h4>
                         </div>
+                    </div>
+                    <div className="flex flex-col h-fit w-4/5 mx-auto">
+                        <div className="flex flex-row justify-center">
+                            <button
+                                id="masterylist"
+                                onClick={handleIsMasteryList}
+                                className={ isMasteryList ? "header-buttons pr-2 underline" : " header-buttons pr-2 hover:underline"}
+                            >
+                                Mastery
+                            </button>
+                            <button
+                                id="masteryjourney"
+                                onClick={handleIsMasteryList}
+                                className={ !isMasteryList ? "header-buttons pr-2 underline" : "header-buttons pr-2 hover:underline"}
+                            >
+                                Journey
+                            </button>
+                        </div>
+                        {isMasteryList ? <MasteryTable/> : <Journey/> }
                     </div>
                 </>
             )}

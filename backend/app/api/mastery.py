@@ -36,7 +36,7 @@ def mastery_all() -> Response:
         res.status_code = status
         return res
 
-    mastery_data = json.dumps(mastery_info[0])
+    mastery_data = json.dumps(mastery_info)
 
     res.response = mastery_data
     res.status_code = 200

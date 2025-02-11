@@ -1,5 +1,5 @@
 import champsByID from "../../../lib/data/champions_by_id.json" assert { type: 'json' }
-
+//TODO: Update script to retrieve new champions by ID
 /**
  * Get champion square asset through Riot CDN
  *
@@ -7,6 +7,8 @@ import champsByID from "../../../lib/data/champions_by_id.json" assert { type: '
  * @returns {String} Complete CDN url
  */
 export function getChampionSquareAsset(champId) {
+    console.log(champId)
+    console.log(champsByID[champId].image.full)
     const champPng = champsByID[champId].image.full
     const url = `https://ddragon.leagueoflegends.com/cdn/15.2.1/img/champion/${champPng}`
     return url
@@ -15,4 +17,6 @@ export function getChampionSquareAsset(champId) {
 export function getChampionName(champId) {
     return champsByID[champId].name
 }
+
+
 

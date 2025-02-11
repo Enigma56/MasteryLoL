@@ -23,6 +23,22 @@
         font-size: 4rem;
         color: #c89b3c;
     }
+
+    h2 {
+        font-family: 'BeaufortforLOL-Bold', serif;
+        font-size: 3rem;
+    }
+
+    h3 {
+        font-family: 'BeaufortforLOL-Bold', serif;
+        font-size: 1.5rem;
+    }
+
+    h4 {
+        font-family: 'BeaufortforLOL-Bold', serif;
+        font-size: 1.25rem;
+    }
+
     h5 {
         font-family: 'BeaufortforLOL-Bold', serif;
         font-size: 1rem;
@@ -30,6 +46,16 @@
 
     body {
         background-color: #091428;
+    }
+
+    .header-buttons {
+        font-family: 'BeaufortforLOL-Bold', serif;
+        font-size: 1.5rem;
+    }
+
+    .number{
+        font-family: 'BeaufortforLOL-Bold', serif;
+        font-size: 1.25rem;
     }
 }
 
