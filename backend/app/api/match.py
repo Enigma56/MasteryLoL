@@ -15,7 +15,7 @@ def get_match_ids():
     puuid = request.cookies.get("puuid")
     p_count: Optional[str] = request.args.get("count")
 
-    query_params: str = get_query_params(count=p_count)
+    query_params: Optional[str] =  get_query_params(count=p_count) if p_count is not None else ""
     endpoint: str = f"{BASE_URL}/lol/match/v5/matches/by-puuid/{puuid}/ids{query_params}"
     req = requests.get(
         endpoint,
@@ -26,6 +26,22 @@ def get_match_ids():
     )
     matches = req.json()
     return matches
+
+
+@match_bp.get("/<match_id>")
+def get_match_by_id(match_id: str):
+    endpoint: str = f"{BASE_URL}/lol/match/v5/matches/{match_id}"
+    req = requests.get(
+        endpoint,
+        timeout=MASTERY_TIMEOUT,
+        headers={"Content-Type": "application/json",
+                 "X-RIOT-TOKEN": f"{API_KEY}"
+                 }
+    )
+    match = req.json()
+    return match
+
+# TODO: Push match information into json file
 
 def get_query_params(**kwargs) -> str:
     params = "?"

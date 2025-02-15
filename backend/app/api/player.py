@@ -1,11 +1,13 @@
+import datetime
+import time
 import json
 from flask import current_app as app, Blueprint, Response, make_response, request
-from sqlalchemy.exc import DatabaseError
 
 from .. import db
-from ..models import PlayerMasteryData
+from .utils.db_helpers import create_mastery_record, update_mastery_record, get_record_from
 from .utils import constants
 from .mastery import get_all_mastery
+from ..models import PlayerMasteryData
 
 player_bp = Blueprint('player', __name__, url_prefix='/player')
 
@@ -21,30 +23,60 @@ def start_journey() -> Response:
         res.status_code = status
         return res
 
-    mastery_data = json.dumps(mastery_info[0])
-
+    mastery_data = json.dumps(mastery_info)
     with app.app_context():
-        try:
-            player_mastery_data = PlayerMasteryData(
-                riot_puuid=puuid,
-                parent_id=puuid,
+        create_mastery_record(db.session, puuid, mastery_data)
 
-                initial_mastery=mastery_data,
-                current_mastery=mastery_data,
-            )
-            db.session.add(player_mastery_data)
-        except DatabaseError as e:
-            app.logger.error(e)
-            db.session.rollback()
-            res.status_code = 404
-            return res
-        finally:
-            db.session.commit()
     return res
 
-#TODO: Implement starting a mastery journey
-@player_bp.put("/journey/update")
-def update_journey() -> Response:
+@player_bp.patch("/journey/update")
+def patch_journey_information() -> Response:
+    puuid = request.cookies.get("riot_puuid")
+    res = make_response()
+
+    mastery_info, status = get_all_mastery(puuid)
+    if status >= 400:
+        res.status_code = status
+        return res
+
+    mastery_data = json.dumps(mastery_info)
+    response = update_mastery_data(puuid, mastery_data)
+    if response is None:
+        res.status_code = 500
+        return res
+
+    res.status_code = 200
+    return res
+
+
+@player_bp.get("/journey/last_updated")
+def get_journey_last_updated() -> Response:
     res = make_response()
     res.headers.update(constants.DEFAULT_RESPONSE_HEADERS)
+    puuid: str = request.cookies.get("riot_puuid")
+
+    with app.app_context():
+        mastery_record = get_record_from(PlayerMasteryData, db.session, puuid)
+        # TODO: Get Match Records
+        if mastery_record is None: # Or match_records is none
+            res.status_code = 404
+            return res
+
+    res.response = json.dumps({"last_updated": mastery_record.get("last_updated")})
+    res.status_code = 200
     return res
+
+
+def update_mastery_data(puuid: str, mastery_data: str) -> any:
+    with app.app_context():
+        record = get_record_from(PlayerMasteryData, db.session, puuid)
+        if record is None:
+            return None
+        else:
+            update_mastery_record(db.session, puuid, mastery_data)
+            return mastery_data
+
+
+def update_match_data():
+    pass
+

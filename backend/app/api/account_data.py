@@ -26,6 +26,7 @@ def get_account_information() -> Response:
 
     name: str = request.args.get("name").lower()
     tagline: str = request.args.get("tag")
+
     app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
 
     status, account_info = get_riot_puuid(name, tagline)
@@ -38,7 +39,7 @@ def get_account_information() -> Response:
     riot_puuid = account_info['puuid']
 
     with app.app_context():
-        user_record = db_helpers.get_user_record(db.session, riot_puuid)
+        user_record = db_helpers.get_record_from(RiotAccounts, db.session, riot_puuid)
         if user_record is None:
             res.status_code = 404
             return res
@@ -59,6 +60,8 @@ def post_acccount_information() -> Response:
     name: str = request.args.get("name").lower()
     tagline: str = request.args.get("tag")
 
+    print(request.query_string)
+
     status, account_info = get_riot_puuid(name, tagline)
     if status >= 400:
         app.logger.error(f"Error getting account information for {name} with tagline: {tagline}")
@@ -68,12 +71,11 @@ def post_acccount_information() -> Response:
 
     puuid = account_info['puuid']
 
-    with app.app_context():
-        record = db_helpers.get_user_record(db.session, puuid)
-        if record is not None:
-            app.logger.error("Riot account already exists, setting cookie instead")
-            res.status_code = 400
-            return res
+    record = db_helpers.get_record_from(RiotAccounts, db.session, puuid)
+    if record is not None:
+        app.logger.error("Riot account already exists, setting cookie instead")
+        res.status_code = 400
+        return res
 
     app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
     _, summoner_info = get_summoner_information(puuid)

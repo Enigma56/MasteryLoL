@@ -1,5 +1,7 @@
 import os
-from flask import Flask
+import logging
+
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
@@ -24,6 +26,8 @@ def create_app(testing=False):
             DEBUG=True,
             SQLALCHEMY_ECHO=False,
         )
+
+        app.logger.setLevel(logging.DEBUG)
 
         if not testing:
             db_url = f"sqlite:///{app.root_path}/dev.db"
@@ -52,13 +56,24 @@ def create_app(testing=False):
         from .api import mastery
         from .api import account_data
         from .api import match
+        from .api import player
         app.register_blueprint(account_data.account_bp)
         app.register_blueprint(mastery.mastery_bp)
         app.register_blueprint(match.match_bp)
+        app.register_blueprint(player.player_bp)
 
         @app.route('/', methods=['GET'])
         def test():
-            return {"hello": "world"}, 200
+            routes = []
+            for rule in app.url_map.iter_rules():
+                if rule.endpoint != 'static':  # Ignore static routes
+                    methods = ','.join(sorted(rule.methods))
+                    routes.append({
+                        'endpoint': rule.endpoint,
+                        'methods': methods,
+                        'rule': str(rule)
+                    })
+            return jsonify(routes)
 
         return app
 

@@ -7,6 +7,7 @@ from flask import Blueprint, Response, request, make_response, current_app as ap
 from sqlalchemy.exc import DatabaseError
 
 from .utils import constants as consts
+from .utils.db_helpers import create_mastery_record, update_mastery_record
 from ..models import PlayerMasteryData
 from .. import db
 
@@ -37,6 +38,8 @@ def mastery_all() -> Response:
         return res
 
     mastery_data = json.dumps(mastery_info)
+    with app.app_context():
+        create_mastery_record(db.session, riot_puuid, mastery_data)
 
     res.response = mastery_data
     res.status_code = 200
