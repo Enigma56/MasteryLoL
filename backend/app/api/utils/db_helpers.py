@@ -9,12 +9,8 @@ Table = RiotAccounts | PlayerMasteryData | MatchStats
 
 
 def get_record_from(table: Table, db_session: Session, riot_puuid: str) -> dict | None:
-    try:
-        record = db_session.get(table, riot_puuid)
-        return record.to_dict() if record else None
-    except SQLAlchemyError as e:
-        app.logger.error(f"SQLAlchemy error: {e}")
-        return None
+    record = db_session.get(table, riot_puuid)
+    return record.to_dict() if record else None
 
 
 def create_mastery_record(db_session: Session, puuid: str, mastery_info: JSON):
@@ -52,3 +48,11 @@ def get_match_records(db_session: Session, puuid: str) -> any:
         app.logger.error(f"SQLAlchemy error: {e}")
 
 # TODO: Get most recent records
+
+# # TODO: Load the environment variables in app/__init__.py
+# def create_db_url(turso_db_url, turso_auth_token) -> str:
+#     TURSO_DATABASE_URL = turso_db_url
+#     TURSO_AUTH_TOKEN = turso_auth_token
+#     dbURL = f"sqlite+{TURSO_DATABASE_URL}/?authToken={TURSO_AUTH_TOKEN}&secure=True"
+#
+#     return dbURL

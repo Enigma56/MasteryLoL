@@ -6,8 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
 
-from . import dbh as db_helpers
-
 Base = declarative_base()
 db = SQLAlchemy(model_class=Base)
 

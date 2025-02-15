@@ -2,10 +2,16 @@ import datetime
 
 from typing import List
 from sqlalchemy import String, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, declared_attr
 from sqlalchemy.dialects.sqlite import JSON
 
 from . import db
+
+
+class BaseMixin(object):
+    def to_dict(self) -> dict:
+        return {key: value for key, value in self.__dict__.items() if not key.startswith('_')}
+
 
 # NOTE: Integer-type primary keys automatically increment
 class TableTest(db.Model):
@@ -21,7 +27,7 @@ class TableTest(db.Model):
         )
 
 
-class PlayerMasteryData(db.Model):
+class PlayerMasteryData(BaseMixin, db.Model):
     __tablename__ = "player_mastery_data"
 
     riot_puuid: Mapped[str] = mapped_column(primary_key=True, nullable=False)
@@ -34,9 +40,6 @@ class PlayerMasteryData(db.Model):
 
     account: Mapped["RiotAccounts"] = db.relationship(back_populates="mastery_data", single_parent=True)
 
-    def to_dict(self) -> dict:
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
     def __repr__(self) -> str:
         return (
             f"ChampionMastery(id={self.id}, "
@@ -45,7 +48,7 @@ class PlayerMasteryData(db.Model):
             f"initial_level={self.initial_level})")
 
 
-class RiotAccounts(db.Model):
+class RiotAccounts(BaseMixin, db.Model):
     __tablename__ = "riot_accounts"
 
     riot_puuid: Mapped[str] = mapped_column(primary_key=True, unique=True)
@@ -62,9 +65,6 @@ class RiotAccounts(db.Model):
     mastery_data: Mapped["PlayerMasteryData"] = db.relationship(back_populates="account")
     matches: Mapped[List["MatchStats"]] = db.relationship()
 
-    def to_dict(self) -> dict:
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
     def __repr__(self):
         return (f"Account(riot_puuid:{self.riot_puuid}, "
                 f"game_name:{self.game_name}), "
@@ -73,7 +73,7 @@ class RiotAccounts(db.Model):
                 f"profile_icon:{self.profile_icon})")
 
 
-class MatchStats(db.Model):
+class MatchStats(BaseMixin, db.Model):
     __tablename__ = "match_stats"
 
     # NOTE: Game metadata
@@ -83,17 +83,9 @@ class MatchStats(db.Model):
     created_at: Mapped[int] = mapped_column(default=int(datetime.datetime.now(datetime.UTC).timestamp()))
     match_stats = mapped_column(JSON, nullable=False)
 
-    def to_dict(self) -> dict:
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
     def __repr__(self) -> str:
         return (
-            f"MatchPlayerStats("
+            f"MatchStats("
             f"match_id='{self.match_id}', "
-            f"riot_puuid='{self.riot_puuid}', "
-            f"champion_name='{self.champion_name}', "
-            f"kills={self.kills}, "
-            f"deaths={self.deaths}, "
-            f"assists={self.assists}, "
-            f"win={self.win})"
+            f"riot_puuid='{self.riot_puuid}'"
         )
