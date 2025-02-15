@@ -1,10 +1,9 @@
-from typing import List
 import datetime
 
-
-from sqlalchemy import DateTime
+from typing import List
+from sqlalchemy import String, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql import func
+from sqlalchemy.dialects.sqlite import JSON
 
 from . import db
 
@@ -12,27 +11,27 @@ from . import db
 class TableTest(db.Model):
     __tablename__ = "test"
 
-    id: Mapped[int] = db.Column('id', db.Integer, primary_key=True)
-    name: Mapped[str] = db.Column('name', db.String)
-    tag: Mapped[str] = db.Column('tag', db.String)
+    id: Mapped[int] = db.Column('id', Integer, primary_key=True)
+    name: Mapped[str] = db.Column('name', String)
+    tag: Mapped[str] = db.Column('tag', String)
 
     def __repr__(self) -> str:
         return (
             f"TestTable(id={self.id}, game_name={self.name}, tag={self.tag})"
         )
 
+
 class PlayerMasteryData(db.Model):
     __tablename__ = "player_mastery_data"
 
     riot_puuid: Mapped[str] = mapped_column(primary_key=True, nullable=False)
+    parent_id: Mapped[str] = mapped_column(ForeignKey("riot_accounts.riot_puuid"))
+
     created_at: Mapped[int] = mapped_column(nullable=False, default=int(datetime.datetime.now(datetime.UTC).timestamp()))
     last_updated: Mapped[int] = mapped_column(default=int(datetime.datetime.now(datetime.UTC).timestamp()))
+    initial_mastery = mapped_column(JSON, nullable=False)
+    current_mastery = mapped_column(JSON, nullable=False)
 
-    # Store Mastery data in JSON format
-    initial_mastery: Mapped[dict] = mapped_column(db.JSON, nullable=False)
-    current_mastery: Mapped[dict] = mapped_column(db.JSON, nullable=False)
-
-    parent_id: Mapped[str] = mapped_column(db.String, db.ForeignKey("riot_accounts.riot_puuid"))
     account: Mapped["RiotAccounts"] = db.relationship(back_populates="mastery_data", single_parent=True)
 
     def to_dict(self) -> dict:
@@ -45,12 +44,13 @@ class PlayerMasteryData(db.Model):
             f"created_at={self.created_at}, "
             f"initial_level={self.initial_level})")
 
+
 class RiotAccounts(db.Model):
     __tablename__ = "riot_accounts"
 
     riot_puuid: Mapped[str] = mapped_column(primary_key=True, unique=True)
-    game_name: Mapped[str] = mapped_column(db.String(17), nullable=False)
-    tag_line: Mapped[str] = mapped_column(db.String(6), nullable=False)
+    game_name: Mapped[str] = mapped_column(String(17), nullable=False)
+    tag_line: Mapped[str] = mapped_column(String(6), nullable=False)
     profile_icon: Mapped[int]
     initial_summoner_level: Mapped[int]
     current_summoner_level: Mapped[int]
@@ -72,15 +72,16 @@ class RiotAccounts(db.Model):
                 f"summoner_level:{self.summoner_level}, "
                 f"profile_icon:{self.profile_icon})")
 
-# Stats for an individual player in a match
+
 class MatchStats(db.Model):
     __tablename__ = "match_stats"
 
     # NOTE: Game metadata
-    match_id: Mapped[str] = mapped_column(db.String(14), primary_key=True)
-    riot_puuid: Mapped[str] = mapped_column(db.String, db.ForeignKey('riot_accounts.riot_puuid'), primary_key=True)
-    created_at: Mapped[DateTime] = mapped_column(db.DateTime, default=func.now())
-    match_stats: Mapped[dict] = mapped_column(db.JSON, nullable=False)
+    match_id: Mapped[str] = mapped_column(String(14), primary_key=True)
+    riot_puuid: Mapped[str] = mapped_column(ForeignKey('riot_accounts.riot_puuid'), primary_key=True)
+
+    created_at: Mapped[int] = mapped_column(default=int(datetime.datetime.now(datetime.UTC).timestamp()))
+    match_stats = mapped_column(JSON, nullable=False)
 
     def to_dict(self) -> dict:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

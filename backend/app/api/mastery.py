@@ -1,14 +1,12 @@
-from typing import Final, Tuple, List
 import os
 import requests
 import json
 
+from typing import Final, Tuple, List
 from flask import Blueprint, Response, request, make_response, current_app as app
-from sqlalchemy.exc import DatabaseError
 
 from .utils import constants as consts
-from .utils.db_helpers import create_mastery_record, update_mastery_record
-from ..models import PlayerMasteryData
+from .utils.db_helpers import create_mastery_record
 from .. import db
 
 API_KEY: str | None = os.environ.get("API_KEY")
@@ -38,8 +36,7 @@ def mastery_all() -> Response:
         return res
 
     mastery_data = json.dumps(mastery_info)
-    with app.app_context():
-        create_mastery_record(db.session, riot_puuid, mastery_data)
+    create_mastery_record(db.session, riot_puuid, mastery_info)
 
     res.response = mastery_data
     res.status_code = 200

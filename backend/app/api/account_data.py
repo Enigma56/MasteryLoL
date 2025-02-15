@@ -2,9 +2,9 @@ import os
 import requests
 import json
 
-from typing import Tuple, Final, List
+from typing import Final
 from flask import Blueprint, jsonify, make_response, Response, request, current_app as app
-from sqlalchemy.exc import InvalidRequestError, DatabaseError
+from sqlalchemy.exc import DatabaseError
 
 from .utils import constants as consts, db_helpers
 from .. import db
@@ -27,9 +27,10 @@ def get_account_information() -> Response:
     name: str = request.args.get("name").lower()
     tagline: str = request.args.get("tag")
 
-    app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
+    if name is None or tagline is None:
+        raise ValueError(f"name are both required to find a record")
 
-    status, account_info = get_riot_puuid(name, tagline)
+    account_info, status = get_riot_puuid(name, tagline)
     if status >= 400:
         app.logger.error(f"Error getting account information for {name} with tagline: {tagline}")
         res.status_code = status
@@ -37,18 +38,16 @@ def get_account_information() -> Response:
         return res
 
     riot_puuid = account_info['puuid']
-
-    with app.app_context():
-        user_record = db_helpers.get_record_from(RiotAccounts, db.session, riot_puuid)
-        if user_record is None:
-            res.status_code = 404
-            return res
+    user_record = db_helpers.get_record_from(RiotAccounts, db.session, riot_puuid)
+    if user_record is None:
+        res.status_code = 404
+        res.response = json.dumps({"error": f"Riot account with id:{riot_puuid} not found"})
+        return res
 
     res.response = json.dumps(user_record, default=str)
     return res
 
 
-# TODO: Change to return a response type only
 @account_bp.post("/user")
 def post_acccount_information() -> Response:
     """
@@ -60,44 +59,45 @@ def post_acccount_information() -> Response:
     name: str = request.args.get("name").lower()
     tagline: str = request.args.get("tag")
 
-    print(request.query_string)
+    if name is None or tagline is None:
+        raise ValueError(f"name are both required to find a record")
 
-    status, account_info = get_riot_puuid(name, tagline)
+    account_info, status = get_riot_puuid(name, tagline)
     if status >= 400:
         app.logger.error(f"Error getting account information for {name} with tagline: {tagline}")
         res.status_code = status
-        res.response = json.dumps({})
+        res.response = json.dumps({"error": f"Error getting account information for {name}"})
         return res
 
     puuid = account_info['puuid']
 
     record = db_helpers.get_record_from(RiotAccounts, db.session, puuid)
     if record is not None:
-        app.logger.error("Riot account already exists, setting cookie instead")
+        app.logger.error("Riot account already exists")
         res.status_code = 400
+        res.response = json.dumps({"error": f"Riot account already exists"})
         return res
 
     app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
     _, summoner_info = get_summoner_information(puuid)
     account_info |= summoner_info # Union of two sets
-    app.logger.info(account_info)
 
     try:
-        with app.app_context():
-            account_entry = RiotAccounts(
-                riot_puuid=puuid,
-                game_name=account_info['gameName'],
-                tag_line=account_info['tagLine'],
-                profile_icon=0,
-                initial_summoner_level=account_info['summonerLevel'],
-                current_summoner_level=account_info['summonerLevel'])
-            db.session.add(account_entry)
-            db.session.commit()
+        account_entry = RiotAccounts(
+            riot_puuid=puuid,
+            game_name=account_info['gameName'],
+            tag_line=account_info['tagLine'],
+            profile_icon=0,
+            initial_summoner_level=account_info['summonerLevel'],
+            current_summoner_level=account_info['summonerLevel'])
+        db.session.add(account_entry)
+        db.session.commit()
     except DatabaseError as e:
-        app.logger.error(e)
+        app.logger.error(f"Error inserting user into db with err: {e}")
+        db.session.rollback()
 
         res.status_code = 400
-        res.response = json.dumps({})
+        res.response = json.dumps({"error": f"Error inserting user into db"})
         return res
 
     res.status_code=201
@@ -107,7 +107,7 @@ def post_acccount_information() -> Response:
 
 
 
-def get_riot_puuid(name: str, tagline: str) -> Tuple[int, dict[str, str]]:
+def get_riot_puuid(name: str, tagline: str):
     """
     Retrieves Riot Account information with the associated IGN and tagline
     """
@@ -123,11 +123,11 @@ def get_riot_puuid(name: str, tagline: str) -> Tuple[int, dict[str, str]]:
             )
     account_info = req.json()
     req.close()
-    return req.status_code, account_info
+    return account_info, req.status_code
 
 
 # TODO: Rethink this method and how it works
-def get_summoner_information(riot_puuid: str) -> Tuple[int, dict[str, str]]:
+def get_summoner_information(riot_puuid: str):
     """
     Retrieves summoner information from a provided Riot PUUID
     """
@@ -144,6 +144,7 @@ def get_summoner_information(riot_puuid: str) -> Tuple[int, dict[str, str]]:
     summoner_info = req.json()
 
     return req.status_code, summoner_info
+
 
 #NOTE: Test Endpoints
 @account_bp.route("/test", methods=["GET"])

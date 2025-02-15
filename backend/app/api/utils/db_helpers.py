@@ -1,26 +1,23 @@
-import types
-
-from sqlalchemy import select
+from sqlalchemy import select, JSON
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from flask import current_app as app
 
 from app.models import RiotAccounts, PlayerMasteryData, MatchStats
 
-CustomTable = RiotAccounts | PlayerMasteryData | MatchStats
+Table = RiotAccounts | PlayerMasteryData | MatchStats
 
 
-def get_record_from(table: CustomTable, db_session: Session, riot_puuid: str) -> dict | None:
+def get_record_from(table: Table, db_session: Session, riot_puuid: str) -> dict | None:
     try:
         record = db_session.get(table, riot_puuid)
-        if record is None:
-            return None
-        else:
-            return record.to_dict()
-    except Exception as e:
+        return record.to_dict() if record else None
+    except SQLAlchemyError as e:
         app.logger.error(f"SQLAlchemy error: {e}")
         return None
 
-def create_mastery_record(db_session: Session, puuid: str, mastery_info: str):
+
+def create_mastery_record(db_session: Session, puuid: str, mastery_info: JSON):
     try:
         record = PlayerMasteryData(
             riot_puuid=puuid,
@@ -34,14 +31,16 @@ def create_mastery_record(db_session: Session, puuid: str, mastery_info: str):
         db_session.rollback()
         app.logger.error(f"SQLAlchemy error: {e}")
 
-def update_mastery_record(db_session: Session, puuid: str, mastery_info: str):
+
+def update_mastery_record(db_session: Session, puuid: str, mastery_info: dict):
     try:
         record = db_session.get(PlayerMasteryData, puuid)
-        record.current_mastery = {}
+        record.current_mastery = mastery_info
         db_session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db_session.rollback()
         app.logger.error(f"SQLAlchemy error: {e}")
+
 
 # TODO: Implement getting records
 def get_match_records(db_session: Session, puuid: str) -> any:
@@ -49,7 +48,7 @@ def get_match_records(db_session: Session, puuid: str) -> any:
     try:
         records = db_session.execute(stmt)
         print(records.scalars().all())
-    except Exception as e:
+    except SQLAlchemyError as e:
         app.logger.error(f"SQLAlchemy error: {e}")
 
 # TODO: Get most recent records
