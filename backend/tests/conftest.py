@@ -28,7 +28,9 @@ def db_session(app):
 
 @pytest.fixture(scope="module")
 def client(app):
-    return app.test_client()
+    client = app.test_client()
+    client.set_cookie("riot_puuid", "VbFNfWhMl53nxTkB59diHEGRp-SrnZYBviQzroixnCjhX_875Dv7UDEcuBZNOTiAbZ75SldP-XxoLw")
+    return client
 
 @pytest.fixture()
 def credentials():
