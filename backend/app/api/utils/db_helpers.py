@@ -14,28 +14,19 @@ def get_record_from(table: Table, db_session: Session, riot_puuid: str) -> dict 
 
 
 def create_mastery_record(db_session: Session, puuid: str, mastery_info: JSON):
-    try:
-        record = PlayerMasteryData(
-            riot_puuid=puuid,
-            initial_mastery=mastery_info,
-            current_mastery=mastery_info,
-            parent_id=puuid,
-        )
-        db_session.add(record)
-        db_session.commit()
-    except Exception as e:
-        db_session.rollback()
-        app.logger.error(f"SQLAlchemy error: {e}")
+    record = PlayerMasteryData(
+        riot_puuid=puuid,
+        initial_mastery=mastery_info,
+        current_mastery=mastery_info,
+        parent_id=puuid,
+    )
+    db_session.add(record)
 
 
-def update_mastery_record(db_session: Session, puuid: str, mastery_info: dict):
-    try:
-        record = db_session.get(PlayerMasteryData, puuid)
-        record.current_mastery = mastery_info
-        db_session.commit()
-    except SQLAlchemyError as e:
-        db_session.rollback()
-        app.logger.error(f"SQLAlchemy error: {e}")
+
+def update_mastery_record(db_session: Session, puuid: str, mastery_info: JSON):
+    record = db_session.get(PlayerMasteryData, puuid)
+    record.current_mastery = mastery_info
 
 
 # TODO: Implement getting records

@@ -3,7 +3,10 @@ import requests
 import json
 
 from typing import Final, Tuple, List
-from flask import Blueprint, Response, request, make_response, current_app as app
+from flask import Blueprint, Response, request, make_response
+from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.exceptions import Unauthorized, BadRequest
 
 from .utils import constants as consts, create_mastery_record
 from .. import db
@@ -26,58 +29,51 @@ def mastery_all() -> Response:
 
     riot_puuid = request.cookies.get("riot_puuid")
     if not riot_puuid:
-        res.status_code = 401
-        return res
+        raise Unauthorized("No puuid cookie is set")
 
     mastery_info, status = get_all_mastery(riot_puuid)
     if status >= 400:
-        res.status_code = status
-        return res
+        raise BadRequest("Invalid puuid")
 
-    mastery_data = json.dumps(mastery_info)
-    create_mastery_record(db.session, riot_puuid, mastery_info)
-
-    res.response = mastery_data
+    res.response = json.dumps(mastery_info)
     res.status_code = 200
     return res
 
 @mastery_bp.route("/top", methods=["GET"])
 def mastery_top() -> Response:
-    riot_puuid = request.cookies.get("riot_puuid")
-
     res = make_response()
-    if not riot_puuid:
-        res.status_code = 401
-        res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
-        return res
-
-    mastery_info = get_top_mastery(riot_puuid)
-    mastery_data = json.dumps(mastery_info[1])
-
-    res.response = mastery_data
     res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
+
+    riot_puuid = request.cookies.get("riot_puuid")
+    if not riot_puuid:
+        raise Unauthorized("No puuid cookie is set")
+
+    mastery_info, status = get_top_mastery(riot_puuid)
+    if status >= 400:
+        raise BadRequest("Riot Servers - Could not process your request")
+
+    res.response = json.dumps(mastery_info)[1]
     res.status_code = 200
     return res
 
 @mastery_bp.route("/sum", methods=["GET"])
 def mastery_sum():
-    riot_puuid = request.cookies.get("riot_puuid")
-
     res = make_response()
-    if not riot_puuid:
-        res.status_code = 401
-        res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
-        return res
-
-    mastery_info = get_sum_mastery(riot_puuid)
-    mastery_data = json.dumps(mastery_info)
-
-    res.response = mastery_data
     res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
+
+    riot_puuid = request.cookies.get("riot_puuid")
+    if not riot_puuid:
+        raise Unauthorized("No puuid cookie is set")
+
+    mastery_info, status = get_sum_mastery(riot_puuid)
+    if status >= 400:
+        raise BadRequest("Riot Servers - Could not process your request")
+
+    res.response = json.dumps(mastery_info)
     res.status_code = 200
     return res
 
-def get_all_mastery(riot_puuid: str) -> Tuple[List[dict[str, str]], int]:
+def get_all_mastery(riot_puuid: str) -> Tuple[JSON, int]:
     endpoint: str = f"/champion-masteries/by-puuid/{riot_puuid}"
     url: str = f"{BASE_URL}{endpoint}"
     req = requests.get(
@@ -91,7 +87,7 @@ def get_all_mastery(riot_puuid: str) -> Tuple[List[dict[str, str]], int]:
     return  mastery_info, req.status_code
 
 
-def get_top_mastery(riot_puuid: str) -> Tuple[int, dict[str, str]]:
+def get_top_mastery(riot_puuid: str) -> Tuple[JSON, int]:
     endpoint: str = f"/champion-masteries/by-puuid/{riot_puuid}/top"
     url: str = f"{BASE_URL}{endpoint}"
     req = requests.get(
@@ -102,9 +98,9 @@ def get_top_mastery(riot_puuid: str) -> Tuple[int, dict[str, str]]:
                      }
             )
     mastery_info = req.json()
-    return req.status_code, mastery_info
+    return mastery_info, req.status_code
 
-def get_sum_mastery(riot_puuid: str) -> Tuple[int, List[dict[str, str]]]:
+def get_sum_mastery(riot_puuid: str) -> Tuple[JSON, int]:
     """
     Get a player's total champion mastery score, which is the sum of
     individual champion mastery levels.
@@ -119,4 +115,4 @@ def get_sum_mastery(riot_puuid: str) -> Tuple[int, List[dict[str, str]]]:
                      }
             )
     mastery_info = req.json()
-    return req.status_code, mastery_info
+    return mastery_info, req.status_code

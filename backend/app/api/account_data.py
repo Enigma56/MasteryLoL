@@ -4,14 +4,14 @@ import json
 
 from typing import Final
 from flask import Blueprint, jsonify, make_response, Response, request, current_app as app
-from sqlalchemy.exc import DatabaseError
+from sqlalchemy.exc import DatabaseError, SQLAlchemyError
+from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed
 
 from .. import db, models
-from .utils import constants as consts, db_helpers
+from .utils import constants as consts, db_helpers, ParamError
 
 API_KEY: str | None = os.environ.get("API_KEY")
 ACCOUNT_TIMEOUT: Final[int] = 5
-EMPTY_RESPONSE: Final[str] = json.dumps({})
 
 account_bp = Blueprint("account", __name__, url_prefix="/account")
 
@@ -27,35 +27,27 @@ def get_account_information() -> Response:
     tagline: str = request.args.get("tag")
 
     if name is None or tagline is None:
-        raise ValueError(f"name and tagline are both required to find a record")
+        raise ParamError(f"name and tagline are both required to find a record")
 
     account_info, status = get_riot_puuid(name, tagline)
     if status >= 400:
-        app.logger.error(f"Error getting account information for {name} with tagline: {tagline}")
-        res.status_code = status
-        res.response = json.dumps({"error": f"Error getting account information for {name}"})
-        return res
+        raise NotFound("Riot Servers - Account not found")
 
     puuid = account_info['puuid']
     record = db_helpers.get_record_from(models.RiotAccounts, db.session, puuid)
     if request.method == "GET":
         if record is None:
-            res.status_code = 404
-            res.response = json.dumps({"error": f"Riot account with id:{puuid} not found"})
-            return res
+            raise NotFound("Interal - Account not found in db")
 
         res.response = json.dumps(record, default=str)
         return res
 
     elif request.method == "POST":
         if record is not None:
-            app.logger.error("Riot account already exists")
-            res.status_code = 400
-            res.response = json.dumps({"error": f"Riot account already exists"})
-            return res
+            raise BadRequest("Internal - Account already exists in db")
 
         app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
-        _, summoner_info = get_summoner_information(puuid)
+        summoner_info, _ = get_summoner_information(puuid)
         account_info |= summoner_info  # Union of two sets
 
         try:
@@ -69,18 +61,18 @@ def get_account_information() -> Response:
             db.session.add(account_entry)
             db.session.commit()
         except DatabaseError as e:
-            app.logger.error(f"Error inserting user into db with err: {e}")
             db.session.rollback()
-
-            res.status_code = 400
-            res.response = json.dumps({"error": f"Error inserting user into db"})
-            return res
+            raise SQLAlchemyError(f"Error inserting user into db with err: {e}")
 
         res.status_code = 201
         res.set_cookie("riot_puuid", account_info['puuid'])
-        res.response = json.dumps({"game_name": account_info["gameName"], "tag_line": account_info["tagLine"]},
-                                  default=str)
+        res.response = json.dumps({
+            "game_name": account_info["gameName"],
+            "tag_line": account_info["tagLine"]},
+            default=str)
         return res
+    else:
+        raise MethodNotAllowed(f"Method not allowed: {request.method}. Only GET and POST are allowed")
 
 
 def get_riot_puuid(name: str, tagline: str):
@@ -119,7 +111,7 @@ def get_summoner_information(riot_puuid: str):
             )
     summoner_info = req.json()
 
-    return req.status_code, summoner_info
+    return summoner_info, req.status_code
 
 
 #NOTE: Test Endpoints

@@ -1,5 +1,8 @@
 import json
 from flask import current_app as app, Blueprint, Response, make_response, request
+from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.exceptions import BadRequest, NotFound
 
 from .. import db
 from ..models import PlayerMasteryData
@@ -18,13 +21,18 @@ def start_journey() -> Response:
 
     mastery_info, status = get_all_mastery(puuid)
     if status >= 400:
-        res.status_code = status
-        return res
+        raise BadRequest("Riot Servers - could not retrieve all mastery")
 
-    mastery_data = json.dumps(mastery_info)
-    with app.app_context():
-        create_mastery_record(db.session, puuid, mastery_data)
+    session = db.session
+    try:
+        create_mastery_record(session, puuid, mastery_info)
+        session.commit()
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise SQLAlchemyError(f"Internal error: {e}")
 
+    res.status_code = 200
+    res.response = json.dumps(mastery_info)
     return res
 
 @player_bp.patch("/journey/update")
@@ -34,11 +42,9 @@ def patch_journey_information() -> Response:
 
     mastery_info, status = get_all_mastery(puuid)
     if status >= 400:
-        res.status_code = status
-        return res
+        raise BadRequest("Riot Servers - could not retrieve all mastery")
 
-    mastery_data = json.dumps(mastery_info)
-    response = update_mastery_data(puuid, mastery_data)
+    response = update_mastery_data(puuid, mastery_info)
     if response is None:
         res.status_code = 500
         return res
@@ -53,26 +59,30 @@ def get_journey_last_updated() -> Response:
     res.headers.update(constants.DEFAULT_RESPONSE_HEADERS)
     puuid: str = request.cookies.get("riot_puuid")
 
-    with app.app_context():
-        mastery_record = get_record_from(PlayerMasteryData, db.session, puuid)
-        # TODO: Get Match Records
-        if mastery_record is None: # Or match_records is none
-            res.status_code = 404
-            return res
+    mastery_record = get_record_from(PlayerMasteryData, db.session, puuid)
+    # TODO: Get Match Records
+    if mastery_record is None: # Or match_records is none
+        raise NotFound("Interal - Record not found in db")
 
     res.response = json.dumps({"last_updated": mastery_record.get("last_updated")})
     res.status_code = 200
     return res
 
 
-def update_mastery_data(puuid: str, mastery_data: str) -> any:
-    with app.app_context():
-        record = get_record_from(PlayerMasteryData, db.session, puuid)
-        if record is None:
-            return None
-        else:
-            update_mastery_record(db.session, puuid, mastery_data)
-            return mastery_data
+def update_mastery_data(puuid: str, mastery_data: JSON) -> any:
+    record = get_record_from(PlayerMasteryData, db.session, puuid)
+    if record is None:
+        return None
+
+    session = db.session
+    try:
+        update_mastery_record(session, puuid, mastery_data)
+        session.commit()
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise SQLAlchemyError(f"Internal error: {e}")
+
+    return mastery_data
 
 
 def update_match_data():
