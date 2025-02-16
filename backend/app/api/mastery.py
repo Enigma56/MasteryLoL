@@ -5,8 +5,7 @@ import json
 from typing import Final, Tuple, List
 from flask import Blueprint, Response, request, make_response, current_app as app
 
-from .utils import constants as consts
-from .utils.db_helpers import create_mastery_record
+from .utils import constants as consts, create_mastery_record
 from .. import db
 
 API_KEY: str | None = os.environ.get("API_KEY")

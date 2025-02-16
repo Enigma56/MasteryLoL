@@ -1,10 +1,10 @@
 import os
 import logging
 
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import declarative_base
-from dotenv import load_dotenv
 
 Base = declarative_base()
 db = SQLAlchemy(model_class=Base)
@@ -41,9 +41,7 @@ def create_app(testing=False):
 
         if not testing:
             with app.app_context():
-                # db.metadata.clear()
-
-                from .models import TableTest, RiotAccounts, PlayerMasteryData, MatchStats # Redundant call to ensure models get imported
+                from .models import TableTest, RiotAccounts, PlayerMasteryData, MatchStats
                 try:
                     db.drop_all()
                     db.create_all()
@@ -51,14 +49,14 @@ def create_app(testing=False):
                     print(e)
 
         # Register blueprints
-        from .api import mastery
-        from .api import account_data
-        from .api import match
-        from .api import player
+        from .api import mastery, account_data, match, player
         app.register_blueprint(account_data.account_bp)
         app.register_blueprint(mastery.mastery_bp)
         app.register_blueprint(match.match_bp)
         app.register_blueprint(player.player_bp)
+
+        from .api.utils import register_custom_error_handlers
+        register_custom_error_handlers(app)
 
         @app.route('/', methods=['GET'])
         def test():

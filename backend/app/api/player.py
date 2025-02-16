@@ -1,13 +1,11 @@
-import datetime
-import time
 import json
 from flask import current_app as app, Blueprint, Response, make_response, request
 
 from .. import db
-from .utils.db_helpers import create_mastery_record, update_mastery_record, get_record_from
-from .utils import constants
-from .mastery import get_all_mastery
 from ..models import PlayerMasteryData
+from .utils import constants
+from .utils.db_helpers import create_mastery_record, update_mastery_record, get_record_from
+from .mastery import get_all_mastery
 
 player_bp = Blueprint('player', __name__, url_prefix='/player')
 

@@ -2,19 +2,21 @@ import datetime
 
 from typing import List
 from sqlalchemy import String, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column, declared_attr
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.dialects.sqlite import JSON
 
 from . import db
 
 
-class BaseMixin(object):
+class Base(db.Model):
+    __abstract__ = True
+
     def to_dict(self) -> dict:
-        return {key: value for key, value in self.__dict__.items() if not key.startswith('_')}
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 # NOTE: Integer-type primary keys automatically increment
-class TableTest(db.Model):
+class TableTest(Base):
     __tablename__ = "test"
 
     id: Mapped[int] = db.Column('id', Integer, primary_key=True)
@@ -27,7 +29,7 @@ class TableTest(db.Model):
         )
 
 
-class PlayerMasteryData(BaseMixin, db.Model):
+class PlayerMasteryData(Base):
     __tablename__ = "player_mastery_data"
 
     riot_puuid: Mapped[str] = mapped_column(primary_key=True, nullable=False)
@@ -48,7 +50,7 @@ class PlayerMasteryData(BaseMixin, db.Model):
             f"initial_level={self.initial_level})")
 
 
-class RiotAccounts(BaseMixin, db.Model):
+class RiotAccounts(Base):
     __tablename__ = "riot_accounts"
 
     riot_puuid: Mapped[str] = mapped_column(primary_key=True, unique=True)
@@ -69,11 +71,11 @@ class RiotAccounts(BaseMixin, db.Model):
         return (f"Account(riot_puuid:{self.riot_puuid}, "
                 f"game_name:{self.game_name}), "
                 f"tag_line:{self.tag_line}, "
-                f"summoner_level:{self.summoner_level}, "
+                f"summoner_level:{self.current_summoner_level}, "
                 f"profile_icon:{self.profile_icon})")
 
 
-class MatchStats(BaseMixin, db.Model):
+class MatchStats(Base):
     __tablename__ = "match_stats"
 
     # NOTE: Game metadata
@@ -85,7 +87,7 @@ class MatchStats(BaseMixin, db.Model):
 
     def __repr__(self) -> str:
         return (
-            f"MatchStats("
+            f"MatchPlayerStats("
             f"match_id='{self.match_id}', "
             f"riot_puuid='{self.riot_puuid}'"
         )

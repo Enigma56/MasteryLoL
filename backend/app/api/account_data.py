@@ -6,9 +6,8 @@ from typing import Final
 from flask import Blueprint, jsonify, make_response, Response, request, current_app as app
 from sqlalchemy.exc import DatabaseError
 
+from .. import db, models
 from .utils import constants as consts, db_helpers
-from .. import db
-from ..models import TableTest, RiotAccounts
 
 API_KEY: str | None = os.environ.get("API_KEY")
 ACCOUNT_TIMEOUT: Final[int] = 5
@@ -16,7 +15,7 @@ EMPTY_RESPONSE: Final[str] = json.dumps({})
 
 account_bp = Blueprint("account", __name__, url_prefix="/account")
 
-@account_bp.get("/user")
+@account_bp.route("/user", methods=["GET", "POST"])
 def get_account_information() -> Response:
     """
     Get account information from Riot API
@@ -28,39 +27,7 @@ def get_account_information() -> Response:
     tagline: str = request.args.get("tag")
 
     if name is None or tagline is None:
-        raise ValueError(f"name are both required to find a record")
-
-    account_info, status = get_riot_puuid(name, tagline)
-    if status >= 400:
-        app.logger.error(f"Error getting account information for {name} with tagline: {tagline}")
-        res.status_code = status
-        res.response = json.dumps({"error": f"Error getting account information for {name}"})
-        return res
-
-    riot_puuid = account_info['puuid']
-    user_record = db_helpers.get_record_from(RiotAccounts, db.session, riot_puuid)
-    if user_record is None:
-        res.status_code = 404
-        res.response = json.dumps({"error": f"Riot account with id:{riot_puuid} not found"})
-        return res
-
-    res.response = json.dumps(user_record, default=str)
-    return res
-
-
-@account_bp.post("/user")
-def post_acccount_information() -> Response:
-    """
-    Create account in DB or retrieve existing record
-    """
-    res = make_response()
-    res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
-
-    name: str = request.args.get("name").lower()
-    tagline: str = request.args.get("tag")
-
-    if name is None or tagline is None:
-        raise ValueError(f"name are both required to find a record")
+        raise ValueError(f"name and tagline are both required to find a record")
 
     account_info, status = get_riot_puuid(name, tagline)
     if status >= 400:
@@ -70,41 +37,50 @@ def post_acccount_information() -> Response:
         return res
 
     puuid = account_info['puuid']
+    record = db_helpers.get_record_from(models.RiotAccounts, db.session, puuid)
+    if request.method == "GET":
+        if record is None:
+            res.status_code = 404
+            res.response = json.dumps({"error": f"Riot account with id:{puuid} not found"})
+            return res
 
-    record = db_helpers.get_record_from(RiotAccounts, db.session, puuid)
-    if record is not None:
-        app.logger.error("Riot account already exists")
-        res.status_code = 400
-        res.response = json.dumps({"error": f"Riot account already exists"})
+        res.response = json.dumps(record, default=str)
         return res
 
-    app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
-    _, summoner_info = get_summoner_information(puuid)
-    account_info |= summoner_info # Union of two sets
+    elif request.method == "POST":
+        if record is not None:
+            app.logger.error("Riot account already exists")
+            res.status_code = 400
+            res.response = json.dumps({"error": f"Riot account already exists"})
+            return res
 
-    try:
-        account_entry = RiotAccounts(
-            riot_puuid=puuid,
-            game_name=account_info['gameName'],
-            tag_line=account_info['tagLine'],
-            profile_icon=0,
-            initial_summoner_level=account_info['summonerLevel'],
-            current_summoner_level=account_info['summonerLevel'])
-        db.session.add(account_entry)
-        db.session.commit()
-    except DatabaseError as e:
-        app.logger.error(f"Error inserting user into db with err: {e}")
-        db.session.rollback()
+        app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
+        _, summoner_info = get_summoner_information(puuid)
+        account_info |= summoner_info  # Union of two sets
 
-        res.status_code = 400
-        res.response = json.dumps({"error": f"Error inserting user into db"})
+        try:
+            account_entry = models.RiotAccounts(
+                riot_puuid=puuid,
+                game_name=account_info['gameName'],
+                tag_line=account_info['tagLine'],
+                profile_icon=0,
+                initial_summoner_level=account_info['summonerLevel'],
+                current_summoner_level=account_info['summonerLevel'])
+            db.session.add(account_entry)
+            db.session.commit()
+        except DatabaseError as e:
+            app.logger.error(f"Error inserting user into db with err: {e}")
+            db.session.rollback()
+
+            res.status_code = 400
+            res.response = json.dumps({"error": f"Error inserting user into db"})
+            return res
+
+        res.status_code = 201
+        res.set_cookie("riot_puuid", account_info['puuid'])
+        res.response = json.dumps({"game_name": account_info["gameName"], "tag_line": account_info["tagLine"]},
+                                  default=str)
         return res
-
-    res.status_code=201
-    res.set_cookie("riot_puuid", account_info['puuid'])
-    res.response = json.dumps({"game_name": account_info["gameName"], "tag_line": account_info["tagLine"]}, default=str)
-    return res
-
 
 
 def get_riot_puuid(name: str, tagline: str):
@@ -150,7 +126,7 @@ def get_summoner_information(riot_puuid: str):
 @account_bp.route("/test", methods=["GET"])
 def tests() -> Response:
     with app.app_context():
-        test_entry = TableTest(name="its just a prank", tag="6969")
+        test_entry = models.TableTest(name="its just a prank", tag="6969")
         db.session.add(test_entry)
         db.session.commit()
 
@@ -162,7 +138,7 @@ def tests_get() -> Response:
     pk = request.args.get("id")
     print(pk)
     with app.app_context():
-        stmt = db.session.get(TableTest, pk)
+        stmt = db.session.get(models.TableTest, pk)
         print(stmt)
 
     return jsonify({"pk": pk})
