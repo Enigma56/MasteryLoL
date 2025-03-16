@@ -37,8 +37,12 @@ class PlayerMasteryData(Base):
 
     created_at: Mapped[int] = mapped_column(nullable=False, default=int(datetime.datetime.now(datetime.UTC).timestamp()))
     last_updated: Mapped[int] = mapped_column(default=int(datetime.datetime.now(datetime.UTC).timestamp()))
+
     initial_mastery = mapped_column(JSON, nullable=False)
+    initial_points: Mapped[int] = mapped_column(nullable=False)
+
     current_mastery = mapped_column(JSON, nullable=False)
+    current_points: Mapped[int] = mapped_column(nullable=False)
 
     account: Mapped["RiotAccounts"] = db.relationship(back_populates="mastery_data", single_parent=True)
 

@@ -23,9 +23,11 @@ def start_journey() -> Response:
     if status >= 400:
         raise BadRequest("Riot Servers - could not retrieve all mastery")
 
+    points = sum([champ['championPoints'] for champ in mastery_info])
+
     session = db.session
     try:
-        create_mastery_record(session, puuid, mastery_info)
+        create_mastery_record(session, puuid, mastery_info, points)
         session.commit()
     except SQLAlchemyError as e:
         session.rollback()
@@ -42,7 +44,13 @@ def patch_journey_information() -> Response:
     if status >= 400:
         raise BadRequest("Riot Servers - could not retrieve all mastery")
 
-    update_mastery_data(puuid, mastery_info)
+    session = db.session
+    try:
+        update_mastery_record(session, puuid, mastery_info)
+        session.commit()
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise SQLAlchemyError(f"Internal error: {e}")
 
     return jsonify({"message": "OK"})
 
@@ -58,19 +66,3 @@ def get_journey_last_updated() -> Response:
     res.response = json.dumps({"last_updated": mastery_record.get("last_updated")})
     res.status_code = 200
     return res
-
-
-def update_mastery_data(puuid: str, mastery_data: JSON):
-    session = db.session
-    try:
-        update_mastery_record(session, puuid, mastery_data)
-        session.commit()
-    except SQLAlchemyError as e:
-        session.rollback()
-        raise SQLAlchemyError(f"Internal error: {e}")
-
-
-# IMPORTANT: Not Implemented
-def update_match_data():
-    pass
-

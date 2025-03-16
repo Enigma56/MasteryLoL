@@ -55,7 +55,7 @@ def create_app(testing=False):
         app.register_blueprint(account_data.account_bp)
         app.register_blueprint(mastery.mastery_bp)
         app.register_blueprint(match.match_bp)
-        app.register_blueprint(player.journey_bp)
+        app.register_blueprint(journey.journey_bp)
 
         from .api.utils import register_custom_error_handlers
         register_custom_error_handlers(app)

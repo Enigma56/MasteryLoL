@@ -76,7 +76,7 @@ def mastery_sum():
     res.status_code = 200
     return res
 
-@mastery_bp.get("/points", methods=["GET"])
+@mastery_bp.get("/points")
 def get_mastery_points() -> Response:
     res = make_response()
     res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
@@ -84,9 +84,7 @@ def get_mastery_points() -> Response:
     puuid = request.cookies.get("riot_puuid")
 
     total_points = get_total_points(db.session, puuid)
-
     return jsonify(points=total_points)
-
 
 @mastery_bp.route("/champs-by-id", methods=["GET"])
 def champs_by_id():
