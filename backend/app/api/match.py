@@ -20,17 +20,7 @@ API_KEY: str | None = os.environ.get("API_KEY")
 MASTERY_TIMEOUT: Final[int] = 5
 
 
-@match_bp.post("/fixture")
-def try_add_matches():
-    puuid = request.cookies.get("riot_puuid")
-    p_count: Optional[str] = request.args.get("count")
-    query_params: Optional[str] =  get_query_params(count=p_count) if p_count is not None else ""
-
-    match_ids = get_match_ids(query_params=query_params)
-    add_matches(puuid, match_ids)
-    return jsonify({"ids": match_ids})
-
-@match_bp.get("/matches")
+@match_bp.get("/get-all")
 def get_matches_by_puuid():
     res = make_response()
     res.headers.update(DEFAULT_RESPONSE_HEADERS)
@@ -44,11 +34,22 @@ def get_matches_by_puuid():
 
     json_matches = json.dumps([match.to_dict() for match in matches])
     res.response = json_matches
-
     return res
 
+@match_bp.post("/add")
+def add_recent_matches():
+    """
+    Respond with data from 20 most recent match_ids from player account
+    """
+    puuid = request.cookies.get("riot_puuid")
+    p_count: Optional[str] = request.args.get("count")
+    query_params: Optional[str] =  get_query_params(count=p_count) if p_count is not None else ""
 
-# TODO: Fix this
+    match_ids = get_match_ids(query_params=query_params)
+    add_matches(puuid, match_ids)
+    return jsonify({"ids": match_ids})
+
+
 def add_matches(puuid: str, match_ids: list[str]):
     for match_id in match_ids:
         res = get_match_by_id(match_id)

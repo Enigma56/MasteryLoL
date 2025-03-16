@@ -42,6 +42,9 @@ def get_match_records(db_session: Session, puuid: str) -> any:
     records = db_session.execute(stmt).scalars().all()
     return records
 
+def get_total_points(db_session: Session, puuid: str) -> int:
+
+
 
 # # TODO: Load the environment variables in app/__init__.py
 # def create_db_url(turso_db_url, turso_auth_token) -> str:

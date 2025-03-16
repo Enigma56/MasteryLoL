@@ -1,6 +1,6 @@
 from flask import jsonify
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed
+from werkzeug.exceptions import NotFound, BadRequest, MethodNotAllowed, InternalServerError
 
 
 class ParamError(Exception):
@@ -20,6 +20,10 @@ def register_custom_error_handlers(app):
     @app.errorhandler(MethodNotAllowed)
     def handle_method_not_allowed(err):
         return jsonify({"error": str(err)}), 405
+
+    @app.errorhandler(InternalServerError)
+    def handle_internal_server_error(err):
+        return jsonify({"error": str(err)}), 500
 
     # Custom Handlers
     @app.errorhandler(ParamError)

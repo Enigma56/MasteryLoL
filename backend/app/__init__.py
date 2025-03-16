@@ -51,7 +51,7 @@ def create_app(testing=False):
                     print(e)
 
         # Register blueprints
-        from .api import mastery, account_data, match, player
+        from .api import mastery, account_data, match, journey
         app.register_blueprint(account_data.account_bp)
         app.register_blueprint(mastery.mastery_bp)
         app.register_blueprint(match.match_bp)

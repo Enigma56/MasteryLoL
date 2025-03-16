@@ -1,8 +1,8 @@
 import json
-from flask import current_app as app, Blueprint, Response, make_response, request
+from flask import Blueprint, Response, make_response, request, jsonify
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadRequest
 
 from .. import db
 from ..models import PlayerMasteryData
@@ -38,42 +38,29 @@ def start_journey() -> Response:
 @journey_bp.patch("/update")
 def patch_journey_information() -> Response:
     puuid = request.cookies.get("riot_puuid")
-    res = make_response()
-
     mastery_info, status = get_all_mastery(puuid)
     if status >= 400:
         raise BadRequest("Riot Servers - could not retrieve all mastery")
 
-    response = update_mastery_data(puuid, mastery_info)
-    if response is None:
-        res.status_code = 500
-        return res
+    update_mastery_data(puuid, mastery_info)
 
-    res.status_code = 200
-    return res
+    return jsonify({"message": "OK"})
 
 
-@journey_bp.get("/last_updated")
+@journey_bp.get("/last-updated")
 def get_journey_last_updated() -> Response:
     res = make_response()
     res.headers.update(constants.DEFAULT_RESPONSE_HEADERS)
-    puuid: str = request.cookies.get("riot_puuid")
 
+    puuid: str = request.cookies.get("riot_puuid")
     mastery_record = get_record_from(PlayerMasteryData, db.session, puuid)
-    # TODO: Get Match Records
-    if mastery_record is None: # Or match_records is none
-        raise NotFound("Interal - Record not found in db")
 
     res.response = json.dumps({"last_updated": mastery_record.get("last_updated")})
     res.status_code = 200
     return res
 
 
-def update_mastery_data(puuid: str, mastery_data: JSON) -> any:
-    record = get_record_from(PlayerMasteryData, db.session, puuid)
-    if record is None:
-        return None
-
+def update_mastery_data(puuid: str, mastery_data: JSON):
     session = db.session
     try:
         update_mastery_record(session, puuid, mastery_data)
@@ -82,9 +69,8 @@ def update_mastery_data(puuid: str, mastery_data: JSON) -> any:
         session.rollback()
         raise SQLAlchemyError(f"Internal error: {e}")
 
-    return mastery_data
 
-
+# IMPORTANT: Not Implemented
 def update_match_data():
     pass
 

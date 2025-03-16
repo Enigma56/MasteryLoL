@@ -8,7 +8,8 @@ from sqlalchemy.dialects.sqlite import JSON
 from werkzeug.exceptions import Unauthorized, BadRequest
 
 from .utils import constants as consts
-
+from ..api.utils.db_helpers import get_total_points
+from .. import db
 API_KEY: str | None = os.environ.get("API_KEY")
 BASE_URL: Final[str] = "https://na1.api.riotgames.com/lol/champion-mastery/v4"
 MASTERY_TIMEOUT: Final[int] = 5
@@ -74,6 +75,18 @@ def mastery_sum():
     res.response = json.dumps(mastery_info)
     res.status_code = 200
     return res
+
+@mastery_bp.get("/points", methods=["GET"])
+def get_mastery_points() -> Response:
+    res = make_response()
+    res.headers.update(consts.DEFAULT_RESPONSE_HEADERS)
+
+    puuid = request.cookies.get("riot_puuid")
+
+    total_points = get_total_points(db.session, puuid)
+
+    return jsonify(points=total_points)
+
 
 @mastery_bp.route("/champs-by-id", methods=["GET"])
 def champs_by_id():
