@@ -16,25 +16,25 @@ const useAuth = ({name, tagline}) => {
     useEffect(() => {
         const fetchRiotUser = async () => {
             setIsLoading(true)
+            let data;
             try{
                 let res = await fetch(url, {method: "GET", credentials: 'include'})
 
                 if (res.status >= 400) {
-                    let postRes = await fetch(url, {method: "POST", credentials: 'include'}).catch(error => console.log(error))
-                    const data = await postRes.json()
-                    //if (postRes.status = 400) {}
-                    setRiotData(data)
+                    res = await fetch(url, {method: "POST", credentials: 'include'})
+                    data = await res.json()
                 } else {
-                    const data = await res.json()
-                    setRiotData(data)
+                    data = await res.json()
                 }
             } catch (e) {
                 console.error(e)
             } finally {
+                setRiotData(data)
                 setIsLoading(false)
             }
         }
-        fetchRiotUser().catch(e => console.error(e))
+
+        fetchRiotUser().catch(error => console.log(error))
     }, [name, tagline, url])
 
     return { riotData, isLoading }

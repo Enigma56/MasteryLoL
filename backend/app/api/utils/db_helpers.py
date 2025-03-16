@@ -23,22 +23,25 @@ def create_mastery_record(db_session: Session, puuid: str, mastery_info: JSON):
     db_session.add(record)
 
 
+def create_match_record(db_session: Session, puuid: str, match_id, match_stats: JSON):
+    record = MatchStats(
+        match_id=match_id,
+        riot_puuid=puuid,
+        match_stats=match_stats
+    )
+    db_session.add(record)
+
 
 def update_mastery_record(db_session: Session, puuid: str, mastery_info: JSON):
     record = db_session.get(PlayerMasteryData, puuid)
     record.current_mastery = mastery_info
 
 
-# TODO: Implement getting records
 def get_match_records(db_session: Session, puuid: str) -> any:
     stmt = select(MatchStats).where(MatchStats.riot_puuid == puuid)
-    try:
-        records = db_session.execute(stmt)
-        print(records.scalars().all())
-    except SQLAlchemyError as e:
-        app.logger.error(f"SQLAlchemy error: {e}")
+    records = db_session.execute(stmt).scalars().all()
+    return records
 
-# TODO: Get most recent records
 
 # # TODO: Load the environment variables in app/__init__.py
 # def create_db_url(turso_db_url, turso_auth_token) -> str:

@@ -6,16 +6,24 @@ import champsByID from "../../../lib/data/champions_by_id.json" assert { type: '
  * @param {Number} champId Id of champion
  * @returns {String} Complete CDN url
  */
-export function getChampionSquareAsset(champId) {
-    console.log(champId)
-    console.log(champsByID[champId].image.full)
-    const champPng = champsByID[champId].image.full
-    const url = `https://ddragon.leagueoflegends.com/cdn/15.2.1/img/champion/${champPng}`
+// export function getChampionSquareAsset(champId) {
+//     const champPng = champsByID[champId].image.full
+//     const url = `https://ddragon.leagueoflegends.com/cdn/15.2.1/img/champion/${champPng}`
+//     return url
+// }
+//
+// export function getChampionName(champId) {
+//     return champsByID[champId].name
+// }
+
+export function getChampionSquareAsset(champList, champId) {
+    const champPng = champList[champId].image.full
+    const url = `https://ddragon.leagueoflegends.com/cdn/15.4.1/img/champion/${champPng}`
     return url
 }
 
-export function getChampionName(champId) {
-    return champsByID[champId].name
+export function getChampionName(champList, champId) {
+    return champList[champId].name
 }
 
 

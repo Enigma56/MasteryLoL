@@ -10,9 +10,9 @@ from .utils import constants
 from .utils.db_helpers import create_mastery_record, update_mastery_record, get_record_from
 from .mastery import get_all_mastery
 
-player_bp = Blueprint('player', __name__, url_prefix='/player')
+journey_bp = Blueprint('journey', __name__, url_prefix='/journey')
 
-@player_bp.post("/journey/start")
+@journey_bp.post("/start")
 def start_journey() -> Response:
     res = make_response()
     res.headers.update(constants.DEFAULT_RESPONSE_HEADERS)
@@ -35,7 +35,7 @@ def start_journey() -> Response:
     res.response = json.dumps(mastery_info)
     return res
 
-@player_bp.patch("/journey/update")
+@journey_bp.patch("/update")
 def patch_journey_information() -> Response:
     puuid = request.cookies.get("riot_puuid")
     res = make_response()
@@ -53,7 +53,7 @@ def patch_journey_information() -> Response:
     return res
 
 
-@player_bp.get("/journey/last_updated")
+@journey_bp.get("/last_updated")
 def get_journey_last_updated() -> Response:
     res = make_response()
     res.headers.update(constants.DEFAULT_RESPONSE_HEADERS)

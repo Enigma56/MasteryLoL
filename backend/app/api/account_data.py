@@ -40,6 +40,7 @@ def get_account_information() -> Response:
             raise NotFound("Interal - Account not found in db")
 
         res.response = json.dumps(record, default=str)
+        res.set_cookie("riot_puuid", puuid)
         return res
 
     elif request.method == "POST":

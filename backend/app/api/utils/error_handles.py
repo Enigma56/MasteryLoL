@@ -8,6 +8,7 @@ class ParamError(Exception):
 
 def register_custom_error_handlers(app):
     # API Handlers
+
     @app.errorhandler(BadRequest)
     def handle_bad_request(err):
         return jsonify({"error": str(err)}), 400

@@ -4,6 +4,7 @@ import logging
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -19,6 +20,7 @@ def create_app(testing=False):
     if environment == "dev":
         print("DEV")
         app = Flask(__name__, instance_relative_config=True)
+        CORS(app, supports_credentials=True)
         app.config.from_mapping(
             SECRET_KEY='dev',
             DEBUG=True,
@@ -53,7 +55,7 @@ def create_app(testing=False):
         app.register_blueprint(account_data.account_bp)
         app.register_blueprint(mastery.mastery_bp)
         app.register_blueprint(match.match_bp)
-        app.register_blueprint(player.player_bp)
+        app.register_blueprint(player.journey_bp)
 
         from .api.utils import register_custom_error_handlers
         register_custom_error_handlers(app)
