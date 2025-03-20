@@ -1,5 +1,10 @@
-# MasteryLoL
+# Goal
+The goal behind this project is to practice writing a custom API and database connection. It also allowed me to practice
+building a frontend. Working on this project has allowed me to make my own software architecture decisions. These have ranged
+from how to handle API requests and how to structure them. I have also designed the frontend myself and built it myself 
+giving me an opportunity to consider the UX decisions.
 
+# MasteryLoL
 This project is a work in progress and is not yet complete nore ready for deployment. However, this repo is available
 to allow others to look at it. You can check back here for when it is finally released.
 
