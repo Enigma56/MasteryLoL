@@ -1,10 +1,3 @@
-//TODO: Add JSDoc comments for some level of type-hints
-/**
- * @param {String} name - Riot profile name
- * @param {String} tag - Riot tagline
- * @param {boolean} isLoading - is name being fetched
- * @returns {JSX.Element}
- */
 const PlayerName = ({name, tag, isLoading}) => {
     return (
         <>

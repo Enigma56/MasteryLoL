@@ -606,12 +606,12 @@ body {
   position: sticky;
 }
 
-.top-0 {
-  top: 0px;
-}
-
 .bottom-0 {
   bottom: 0px;
+}
+
+.top-0 {
+  top: 0px;
 }
 
 .mx-auto {
@@ -629,6 +629,11 @@ body {
   margin-bottom: 1rem;
 }
 
+.my-auto {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
 .ml-0\.5 {
   margin-left: 0.125rem;
 }
@@ -641,6 +646,14 @@ body {
   margin-top: 0.5rem;
 }
 
+.mr-10 {
+  margin-right: 2.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
 .flex {
   display: flex;
 }
@@ -649,16 +662,17 @@ body {
   display: table;
 }
 
+.size-6 {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 .h-4 {
   height: 1rem;
 }
 
 .h-\[500px\] {
   height: 500px;
-}
-
-.h-dvh {
-  height: 100dvh;
 }
 
 .h-fit {
@@ -672,6 +686,10 @@ body {
 
 .h-1\/2 {
   height: 50%;
+}
+
+.h-10 {
+  height: 2.5rem;
 }
 
 .max-h-fit {
@@ -715,8 +733,21 @@ body {
   width: 80%;
 }
 
+.w-fit {
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
 .w-full {
   width: 100%;
+}
+
+.w-10 {
+  width: 2.5rem;
+}
+
+.w-8 {
+  width: 2rem;
 }
 
 .flex-row {
@@ -727,12 +758,12 @@ body {
   flex-direction: column;
 }
 
-.items-end {
-  align-items: flex-end;
-}
-
 .items-center {
   align-items: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
 }
 
 .justify-center {
@@ -801,10 +832,6 @@ body {
   --tw-gradient-to: #0397AB var(--tw-gradient-to-position);
 }
 
-.p-4 {
-  padding: 1rem;
-}
-
 .px-2 {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
@@ -828,6 +855,10 @@ body {
 
 .text-center {
   text-align: center;
+}
+
+.align-bottom {
+  vertical-align: bottom;
 }
 
 .align-text-bottom {
@@ -875,6 +906,11 @@ body {
 :root {
   font-family: 'Spiegel-Regular';
   color: #a09b8c;
+  height: 100vh;
+}
+
+#root {
+  height: 100vh;
 }
 
 :is(#profile, #tagline):focus {

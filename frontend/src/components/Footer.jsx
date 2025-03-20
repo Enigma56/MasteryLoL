@@ -1,6 +1,6 @@
-const Footer = () => {
+const Footer = ({ className }) => {
     return (
-        <footer className="flex flex-col justify-center max-h-fit my-4">
+        <footer className={className}>
             <div className="mx-auto w-2/3 border-t-2 border-t-hextech-1 my-2"/>
             <div className="flex flex-row justify-center">
                 <div className="w-2/6">

@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, Response, make_response, request, jsonify
+from flask import Blueprint, Response, make_response, request, jsonify, current_app as app
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import BadRequest
@@ -19,6 +19,7 @@ def start_journey() -> Response:
 
     puuid: str = request.cookies.get('riot_puuid')
 
+    print(puuid)
     mastery_info, status = get_all_mastery(puuid)
     if status >= 400:
         raise BadRequest("Riot Servers - could not retrieve all mastery")
@@ -29,9 +30,10 @@ def start_journey() -> Response:
     try:
         create_mastery_record(session, puuid, mastery_info, points)
         session.commit()
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         session.rollback()
-        raise SQLAlchemyError(f"Internal error: {e}")
+        app.logger.warning(f"Internal Server - Mastery record already created")
+        # raise SQLAlchemyError(f"Internal error: {e}")
 
     res.status_code = 200
     res.response = json.dumps(mastery_info)
