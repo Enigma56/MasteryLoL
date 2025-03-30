@@ -20,15 +20,17 @@ API_KEY: str | None = os.environ.get("API_KEY")
 MASTERY_TIMEOUT: Final[int] = 5
 
 
-@match_bp.get("/get-all")
+@match_bp.get("/get")
 def get_matches_by_puuid():
     res = make_response()
     res.headers.update(DEFAULT_RESPONSE_HEADERS)
+
     puuid = request.cookies.get("riot_puuid")
+    # count = request.args.get("count")
 
     session = db.session
     try:
-        matches = get_match_records(session, puuid)
+        matches = get_match_records(session, puuid, 5)
     except SQLAlchemyError as e:
         raise SQLAlchemyError(e)
 
@@ -36,7 +38,7 @@ def get_matches_by_puuid():
     res.response = json_matches
     return res
 
-@match_bp.post("/add")
+# @match_bp.post("/add")
 def add_recent_matches():
     """
     Respond with data from 20 most recent match_ids from player account
@@ -47,7 +49,7 @@ def add_recent_matches():
 
     match_ids = get_match_ids(query_params=query_params)
     add_matches(puuid, match_ids)
-    return jsonify({"ids": match_ids})
+    # return jsonify({"ids": match_ids})
 
 
 def add_matches(puuid: str, match_ids: list[str]):
@@ -57,6 +59,9 @@ def add_matches(puuid: str, match_ids: list[str]):
             raise BadRequest(f"Riot Server - failed to get match stats with code {code}")
 
         match_stats_json = res.get_json()
+        participant_index = match_stats_json["metadata"]["participants"].index(puuid)
+        participant_info = match_stats_json["info"]["participants"][participant_index]
+        match_stats_json["info"]["participants"] = [participant_info]
 
         session = db.session
         try:

@@ -9,6 +9,7 @@ from ..models import PlayerMasteryData
 from .utils import constants
 from .utils.db_helpers import create_mastery_record, update_mastery_record, get_record_from
 from .mastery import get_all_mastery
+from .match import add_recent_matches
 
 journey_bp = Blueprint('journey', __name__, url_prefix='/journey')
 
@@ -19,7 +20,6 @@ def start_journey() -> Response:
 
     puuid: str = request.cookies.get('riot_puuid')
 
-    print(puuid)
     mastery_info, status = get_all_mastery(puuid)
     if status >= 400:
         raise BadRequest("Riot Servers - could not retrieve all mastery")
@@ -34,6 +34,8 @@ def start_journey() -> Response:
         session.rollback()
         app.logger.warning(f"Internal Server - Mastery record already created")
         # raise SQLAlchemyError(f"Internal error: {e}")
+
+    add_recent_matches()
 
     res.status_code = 200
     res.response = json.dumps(mastery_info)

@@ -5,6 +5,7 @@ import useAuth from "../../hooks/useAuth.js"
 import PlayerName from './PlayerName.jsx'
 import Footer from '../Footer.jsx'
 import Journey from "./Journey.jsx";
+import Analytics from "./Analytics.jsx";
 
 const Profile = () => {
     let navigate = useNavigate()
@@ -70,7 +71,7 @@ const Profile = () => {
                         Analytics
                     </button>
                 </div>
-                {isJourneyView ? <Journey/> : <p>Spaghetti</p> }
+                {isJourneyView ? <Journey/> : <Analytics/> }
             </div>
             <Footer className="flex flex-col justify-center max-h-fit my-4"/>
         </div>

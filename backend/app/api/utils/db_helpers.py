@@ -46,8 +46,11 @@ def update_mastery_record(db_session: Session, puuid: str, mastery_info: JSON):
     db_session.flush()
 
 
-def get_match_records(db_session: Session, puuid: str) -> any:
-    stmt = select(MatchStats).where(MatchStats.riot_puuid == puuid)
+def get_match_records(db_session: Session, puuid: str, count: int = 5) -> any:
+    stmt = (select(MatchStats)
+            .where(MatchStats.riot_puuid == puuid)
+            .limit(5)
+            )
     records = db_session.execute(stmt).scalars().all()
     return records
 
