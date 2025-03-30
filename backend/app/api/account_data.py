@@ -29,28 +29,36 @@ def get_account_information() -> Response:
     if name is None or tagline is None:
         raise ParamError(f"name and tagline are both required to find a record")
 
+    app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
     account_info, status = get_riot_puuid(name, tagline)
     if status >= 400:
         raise NotFound("Riot Servers - Account not found")
 
     puuid = account_info['puuid']
+    res.set_cookie("riot_puuid", puuid)
+
     record = db_helpers.get_record_from(models.RiotAccounts, db.session, puuid)
+
     if request.method == "GET":
         if record is None:
+            app.logger.error(f"No record found for {puuid}")
             raise NotFound("Interal - Account not found in db")
 
+        res.status_code = 200
         res.response = json.dumps(record, default=str)
-        res.set_cookie("riot_puuid", puuid)
         return res
 
     elif request.method == "POST":
         if record is not None:
             raise BadRequest("Internal - Account already exists in db")
 
-        app.logger.info(f"Getting account information for {name} with tagline: {tagline}")
-        summoner_info, _ = get_summoner_information(puuid)
+        summoner_info, status = get_summoner_information(puuid)
+        if status >= 400:
+            raise BadRequest("Riot Servers - Account not found")
+
         account_info |= summoner_info  # Union of two sets
 
+        session = db.session
         try:
             account_entry = models.RiotAccounts(
                 riot_puuid=puuid,
@@ -59,22 +67,23 @@ def get_account_information() -> Response:
                 profile_icon=0,
                 initial_summoner_level=account_info['summonerLevel'],
                 current_summoner_level=account_info['summonerLevel'])
-            db.session.add(account_entry)
-            db.session.commit()
+            session.add(account_entry)
+            session.commit()
         except DatabaseError as e:
-            db.session.rollback()
+            session.rollback()
             raise SQLAlchemyError(f"Error inserting user into db with err: {e}")
+        finally:
+            session.close()
 
         res.status_code = 201
-        res.set_cookie("riot_puuid", account_info['puuid'])
-        res.response = json.dumps({
-            "game_name": account_info["gameName"],
-            "tag_line": account_info["tagLine"]},
-            default=str)
+        res.response = json.dumps(account_info, default=str)
         return res
+
     else:
         raise MethodNotAllowed(f"Method not allowed: {request.method}. Only GET and POST are allowed")
 
+
+# NOTE: Riot API Methods
 
 def get_riot_puuid(name: str, tagline: str):
     """
@@ -95,7 +104,6 @@ def get_riot_puuid(name: str, tagline: str):
     return account_info, req.status_code
 
 
-# TODO: Rethink this method and how it works
 def get_summoner_information(riot_puuid: str):
     """
     Retrieves summoner information from a provided Riot PUUID
@@ -113,25 +121,3 @@ def get_summoner_information(riot_puuid: str):
     summoner_info = req.json()
 
     return summoner_info, req.status_code
-
-
-#NOTE: Test Endpoints
-@account_bp.route("/test", methods=["GET"])
-def tests() -> Response:
-    with app.app_context():
-        test_entry = models.TableTest(name="its just a prank", tag="6969")
-        db.session.add(test_entry)
-        db.session.commit()
-
-    return jsonify({"hello": "world"})
-
-@account_bp.route("/test_pk", methods=["GET"])
-def tests_get() -> Response:
-    app.logger.debug(f"Attempting to get pk")
-    pk = request.args.get("id")
-    print(pk)
-    with app.app_context():
-        stmt = db.session.get(models.TableTest, pk)
-        print(stmt)
-
-    return jsonify({"pk": pk})

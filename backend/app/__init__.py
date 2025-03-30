@@ -50,6 +50,10 @@ def create_app(testing=False):
                 except Exception as e:
                     print(e)
 
+        # Register error handling
+        from .api.utils import register_custom_error_handlers
+        register_custom_error_handlers(app)
+
         # Register blueprints
         from .api import mastery, account_data, match, journey
         app.register_blueprint(account_data.account_bp)
@@ -57,8 +61,6 @@ def create_app(testing=False):
         app.register_blueprint(match.match_bp)
         app.register_blueprint(journey.journey_bp)
 
-        from .api.utils import register_custom_error_handlers
-        register_custom_error_handlers(app)
 
         @app.route('/', methods=['GET'])
         def test():

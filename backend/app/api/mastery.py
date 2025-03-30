@@ -115,6 +115,8 @@ def get_all_mastery(riot_puuid: str) -> Tuple[JSON, int]:
     return  mastery_info, req.status_code
 
 
+# NOTE: Riot API Methods
+
 def get_top_mastery(riot_puuid: str) -> Tuple[JSON, int]:
     endpoint: str = f"/champion-masteries/by-puuid/{riot_puuid}/top"
     url: str = f"{BASE_URL}{endpoint}"

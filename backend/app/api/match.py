@@ -38,18 +38,17 @@ def get_matches_by_puuid():
     res.response = json_matches
     return res
 
-# @match_bp.post("/add")
+
+# NOTE: Helper Methods
+
 def add_recent_matches():
     """
     Respond with data from 20 most recent match_ids from player account
     """
     puuid = request.cookies.get("riot_puuid")
-    p_count: Optional[str] = request.args.get("count")
-    query_params: Optional[str] =  get_query_params(count=p_count) if p_count is not None else ""
 
-    match_ids = get_match_ids(query_params=query_params)
+    match_ids = get_match_ids()
     add_matches(puuid, match_ids)
-    # return jsonify({"ids": match_ids})
 
 
 def add_matches(puuid: str, match_ids: list[str]):
